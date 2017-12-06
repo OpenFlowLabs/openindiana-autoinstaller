@@ -4,22 +4,20 @@ const (
 	MediaTypeSolNetBoot = "solnetboot"
 	MediaTypeSolCDrom   = "solcdrom"
 	MediaTypeSolUSB     = "solusb"
-	MediaTypeIPS        = "ips"
-	MediaTypeZAP        = "zap"
 	MediaTypeZImage     = "zimage"
+	MediaTypeACI	= "ACI"
 )
 
 const (
 	InstallTypeBootEnv     = "bootenv"
-	InstallTypeFullDisk    = "fulldisk"
-	InstallTypeEFIFullDisk = "efifulldisk"
+	InstallTypeEFIFullDisk = "fulldisk"
 )
 
 type InstallConfiguration struct {
-	InstallType         string            `json:"install_type"`           //Possible options are efi, bootenv, fulldisk, efifulldisk
+	InstallType         string            `json:"install_type"`           //Possible options are efi, bootenv, fulldisk
 	RootFSType          string            `json:"root_fs_type"`           //ufs, zfs
 	Disks               []string          `json:"disks"`                  //The Disks that shall be used
-	MediaType           string            `json:"media_type"`             //Valid Values are SolNetboot, SolCdrom, SolUSB, IPS, ZAP, ZImage
+	MediaType           string            `json:"media_type"`             //Valid Values are SolNetboot, SolCdrom, SolUSB, ZImage, ACI
 	UseBootEnvironments bool              `json:"use_boot_environments:"` //Whether to use boot environments or not
 	ZFSLayout           interface{}       `json:"zfs_layout"`             //The Partition Layout for ZFS. e.g Where is /var /etc and others located
 	PoolArgs            map[string]string `json:"pool_args"`              //Enable things like compression etc.

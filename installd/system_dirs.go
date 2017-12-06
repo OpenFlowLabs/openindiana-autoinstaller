@@ -10,6 +10,8 @@ import (
 	"syscall"
 
 	"github.com/toasterson/mozaik/logger"
+	"git.wegmueller.it/toasterson/glog"
+	"path/filepath"
 )
 
 type DirConfig struct {
@@ -45,11 +47,15 @@ var defualtDirectories = []DirConfig{
 	{Name: "dev/zcons", Group: "sys"},
 }
 
-func MakeSystemDirectories(rootDir string, dirs []DirConfig) {
+func makeSystemDirectories(rootDir string, dirs []DirConfig, noop bool) error{
 	dirs = append(dirs, defualtDirectories...)
 	for _, dir := range dirs {
-		path := fmt.Sprintf("%s/%s", rootDir, dir.Name)
-		logger.Trace(fmt.Sprintf("Creating System Directory %s", path))
+		path := filepath.Join(rootDir, dir.Name)
+		if noop {
+			glog.Infof("would create directory %s -> %v", path, dir)
+			continue
+		}
+		glog.Tracef("Creating System Directory %s", path)
 		var uid, gid int
 		os.Mkdir(path, 0755)
 		if dir.Mode != 0 {
@@ -58,7 +64,7 @@ func MakeSystemDirectories(rootDir string, dirs []DirConfig) {
 		if dir.Owner != "" {
 			owner, err := user.Lookup(dir.Owner)
 			if err != nil {
-				logger.Error(fmt.Sprintf("User %s does not exist this should not happen %s", dir.Owner, err))
+				glog.Errf("User %s does not exist this should not happen %s", dir.Owner, err)
 			} else {
 				uid, _ = strconv.Atoi(owner.Uid)
 			}
@@ -66,7 +72,7 @@ func MakeSystemDirectories(rootDir string, dirs []DirConfig) {
 		if dir.Group != "" {
 			group, err := user.LookupGroup(dir.Group)
 			if err != nil {
-				logger.Error(fmt.Sprintf("Group %s does not exist this should not happen: %s", dir.Group, err))
+				glog.Errf("Group %s does not exist this should not happen: %s", dir.Group, err)
 			} else {
 				gid, _ = strconv.Atoi(group.Gid)
 			}
@@ -81,4 +87,5 @@ func MakeSystemDirectories(rootDir string, dirs []DirConfig) {
 		}
 		syscall.Chown(path, uid, gid)
 	}
+	return nil
 }

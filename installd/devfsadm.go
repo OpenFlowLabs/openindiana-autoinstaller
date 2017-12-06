@@ -6,7 +6,7 @@ import "os/exec"
 
 var devfsadm_bin = "/usr/sbin/devfsadm"
 
-func CreateDeviceLinks(root string, device_classes []string) (err error) {
+func runDevfsadm(root string, device_classes []string) (err error) {
 	var args []string
 	if root != "" {
 		args = append(args, "-r", root)

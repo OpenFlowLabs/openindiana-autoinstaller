@@ -11,85 +11,122 @@ import (
 	"git.wegmueller.it/opencloud/installer/mount"
 	"git.wegmueller.it/opencloud/opencloud/common"
 	"git.wegmueller.it/opencloud/opencloud/zfs"
-	"github.com/toasterson/mozaik/util"
+	"git.wegmueller.it/toasterson/glog"
 )
 
-const altRootLocation string = "/a"
-const altMountLocation string = "/mnt.install"
-const solusrfileName string = "solaris.zlib"
-const solmediarootfileName string = "boot_archive"
+const altRootLocation = "/a"
+const altMountLocation = "/mnt.install"
+const solusrfileName = "solaris.zlib"
+const solmediarootfileName = "boot_archive"
 
 func Install(conf InstallConfiguration, noop bool) error {
-	//TODO Switch to switch statement
-	if conf.InstallType == "fulldisk" {
-		util.Must(formatDrives(&conf))
+	if err := createAndMountZpool(&conf, noop); err != nil {
+		return err
 	}
-	util.Must(CreateAndMountZpool(&conf))
-	CreateDatasets(&conf)
-	util.Must(InstallOS(&conf))
+	if err := createDatasets(&conf, noop); err != nil {
+		return err
+	}
+	if err := installOS(&conf); err != nil {
+		return err
+	}
 	rootDir := altRootLocation
 	if conf.InstallType == InstallTypeBootEnv {
 		rootDir = GetPathOfBootEnv(conf.BEName)
 	}
-	MakeSystemDirectories(rootDir, []DirConfig{})
-	MakeDeviceLinks(rootDir, []LinkConfig{})
-	util.Must(CreateDeviceLinks(rootDir, []string{}))
+	if err := makeSystemDirectories(rootDir, []DirConfig{}, noop); err != nil {
+		return err
+	}
+	if err := makeDeviceLinks(rootDir, []LinkConfig{}, noop); err != nil {
+		return err
+	}
+	if noop {
+		glog.Infof("Would run devfsadm on /a")
+	} else {
+		if err := runDevfsadm(rootDir, []string{}); err != nil {
+			return err
+		}
+	}
 	bconf := bootadm.BootConfig{Type: bootadm.BootLoaderTypeLoader, RPoolName: conf.RPoolName, BEName: conf.BEName, BootOptions: []string{}}
-	util.Must(bootadm.CreateBootConfigurationFiles(rootDir, bconf))
-	util.Must(bootadm.UpdateBootArchive(rootDir))
-	util.Must(bootadm.InstallBootLoader(rootDir, conf.RPoolName))
+	if noop {
+		glog.Infof("Would apply the following boot config to disk: %v", bconf)
+	} else {
+		if err := bootadm.CreateBootConfigurationFiles(rootDir, bconf); err != nil {
+			return err
+		}
+		if err := bootadm.UpdateBootArchive(rootDir); err != nil {
+			return err
+		}
+		if err := bootadm.InstallBootLoader(rootDir, conf.RPoolName); err != nil {
+			return err
+		}
+	}
 	//Remove SMF Repository to force regeneration of SMF at first boot.
 	//TODO Make own smf package which is a bit more powerfull
-	os.Remove(fmt.Sprintf("/%s/etc/svc/repository.db", rootDir))
-	fixZfsMountPoints(&conf)
+	if err := os.Remove(fmt.Sprintf("/%s/etc/svc/repository.db", rootDir)); err != nil {
+		return err
+	}
+	if err := fixZfsMountPoints(&conf, noop); err != nil{
+		return err
+	}
 	return nil
 }
 
-func fixZfsMountPoints(conf *InstallConfiguration) {
-	bootenv, _ := zfs.OpenDataset(fmt.Sprintf("%s/ROOT/%s", conf.RPoolName, conf.BEName))
-	bootenv.SetProperty("canmount", "noauto")
-	bootenv.SetProperty("mountpoint", "/")
+func fixZfsMountPoints(conf *InstallConfiguration, noop bool) error {
+	var err error
+	var bootenv *zfs.Dataset
+	if noop {
+		glog.Infof("Would set canmount=noauto,mountpoint=/ on %s/ROOT/%s", conf.RPoolName, conf.BEName)
+		return nil
+	}
+	if bootenv, err = zfs.OpenDataset(fmt.Sprintf("%s/ROOT/%s", conf.RPoolName, conf.BEName)); err !=nil {
+		return err
+	}
+	if err = bootenv.SetProperty("canmount", "noauto"); err != nil {
+		return err
+	}
+	if err = bootenv.SetProperty("mountpoint", "/"); err != nil {
+		return err
+	}
+	return nil
 }
 
-func formatDrives(conf *InstallConfiguration) (err error) {
-	//TODO sanity checks if drive exists
-	//TODO Formating
-	return
-}
-
-func InstallOS(conf *InstallConfiguration) (err error) {
+func installOS(conf *InstallConfiguration) (err error) {
 	switch conf.MediaType {
 	case MediaTypeSolNetBoot:
 		//Get the files Needed to /tmp
-		getMediaFiles(conf)
-		installOSFromMediaFiles("/tmp")
+		if err = HTTPDownload(fmt.Sprintf("%s/%s", conf.MediaURL, solusrfileName), "/tmp"); err != nil {
+			return err
+		}
+		if err = HTTPDownload(fmt.Sprintf("%s/platform/i86pc/%s", conf.MediaURL, solmediarootfileName), "/tmp"); err != nil {
+			return err
+		}
+		return installOSFromMediaFiles("/tmp")
 	case MediaTypeSolCDrom:
 	case MediaTypeSolUSB:
 		//Assume everything needed is located under /.cdrom
 		installOSFromMediaFiles("/.cdrom")
-	case MediaTypeIPS:
-		return common.NotSupportedError("IPS installation")
-	case MediaTypeZAP:
-		return common.NotSupportedError("ZAP installation")
 	case MediaTypeZImage:
 		return common.NotSupportedError("Image installation")
+	case MediaTypeACI:
+		if err = HTTPDownload(fmt.Sprintf("%s/%s", conf.MediaURL, "image.aci"), "/tmp"); err != nil {
+			return err
+		}
+		//TODO ACI To Disk Writer
 	default:
 		return common.InvalidConfiguration("MediaType")
 	}
-
 	return
 }
 
-func getMediaFiles(conf *InstallConfiguration) {
-	util.Must(HTTPDownload(fmt.Sprintf("%s/%s", conf.MediaURL, solusrfileName), "/tmp"))
-	//TODO different locations on i86 and amd64
-	util.Must(HTTPDownload(fmt.Sprintf("%s/platform/i86pc/%s", conf.MediaURL, solmediarootfileName), "/tmp"))
-}
-
-func installOSFromMediaFiles(saveLocation string) {
+func installOSFromMediaFiles(saveLocation string) error {
+	var err error
 	os.Mkdir(altMountLocation, os.ModeDir)
-	util.Must(mount.MountLoopDevice("ufs", altMountLocation, fmt.Sprintf("%s/%s", saveLocation, solmediarootfileName)))
-	util.Must(mount.MountLoopDevice("hsfs", fmt.Sprintf("%s/usr", altMountLocation), fmt.Sprintf("%s/%s", saveLocation, solusrfileName)))
+	if err = mount.MountLoopDevice("ufs", altMountLocation, fmt.Sprintf("%s/%s", saveLocation, solmediarootfileName)); err != nil {
+		return err
+	}
+	if err = mount.MountLoopDevice("hsfs", fmt.Sprintf("%s/usr", altMountLocation), fmt.Sprintf("%s/%s", saveLocation, solusrfileName)); err != nil {
+		return err
+	}
 	filelist := []string{
 		"bin",
 		"boot",
@@ -106,4 +143,5 @@ func installOSFromMediaFiles(saveLocation string) {
 	for _, dir := range filelist {
 		filepath.Walk(fmt.Sprintf("%s/%s", altMountLocation, dir), walkCopy)
 	}
+	return nil
 }

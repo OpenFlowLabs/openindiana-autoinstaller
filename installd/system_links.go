@@ -7,6 +7,8 @@ import (
 	"os"
 
 	"github.com/toasterson/mozaik/logger"
+	"path/filepath"
+	"git.wegmueller.it/toasterson/glog"
 )
 
 type LinkConfig struct {
@@ -21,14 +23,17 @@ var defaultLinks = []LinkConfig{
 	{Name: "dld", Target: "../devices/pseudo/dld@0:ctl"},
 }
 
-func MakeDeviceLinks(rootDir string, links []LinkConfig) {
+func makeDeviceLinks(rootDir string, links []LinkConfig, noop bool) error{
 	links = append(links, defaultLinks...)
 	for _, link := range links {
-		path := fmt.Sprintf("%s/dev/%s", rootDir, link.Name)
-		logger.Trace(fmt.Sprintf("Creating Special Link %s -> %s", path, link.Target))
+		path := filepath.Join(rootDir, "dev", link.Name)
+		if noop {
+			glog.Infof("Would create device link %s -> %s", path, link.Target)
+		}
 		err := os.Symlink(link.Target, path)
 		if err != nil {
-			logger.Error(err)
+			return err
 		}
 	}
+	return nil
 }
