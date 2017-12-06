@@ -1,0 +1,109 @@
+// +build solaris
+
+package installd
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"git.wegmueller.it/opencloud/installer/bootadm"
+	"git.wegmueller.it/opencloud/installer/mount"
+	"git.wegmueller.it/opencloud/opencloud/common"
+	"git.wegmueller.it/opencloud/opencloud/zfs"
+	"github.com/toasterson/mozaik/util"
+)
+
+const altRootLocation string = "/a"
+const altMountLocation string = "/mnt.install"
+const solusrfileName string = "solaris.zlib"
+const solmediarootfileName string = "boot_archive"
+
+func Install(conf InstallConfiguration, noop bool) error {
+	//TODO Switch to switch statement
+	if conf.InstallType == "fulldisk" {
+		util.Must(formatDrives(&conf))
+	}
+	util.Must(CreateAndMountZpool(&conf))
+	CreateDatasets(&conf)
+	util.Must(InstallOS(&conf))
+	rootDir := altRootLocation
+	if conf.InstallType == InstallTypeBootEnv {
+		rootDir = GetPathOfBootEnv(conf.BEName)
+	}
+	MakeSystemDirectories(rootDir, []DirConfig{})
+	MakeDeviceLinks(rootDir, []LinkConfig{})
+	util.Must(CreateDeviceLinks(rootDir, []string{}))
+	bconf := bootadm.BootConfig{Type: bootadm.BootLoaderTypeLoader, RPoolName: conf.RPoolName, BEName: conf.BEName, BootOptions: []string{}}
+	util.Must(bootadm.CreateBootConfigurationFiles(rootDir, bconf))
+	util.Must(bootadm.UpdateBootArchive(rootDir))
+	util.Must(bootadm.InstallBootLoader(rootDir, conf.RPoolName))
+	//Remove SMF Repository to force regeneration of SMF at first boot.
+	//TODO Make own smf package which is a bit more powerfull
+	os.Remove(fmt.Sprintf("/%s/etc/svc/repository.db", rootDir))
+	fixZfsMountPoints(&conf)
+	return nil
+}
+
+func fixZfsMountPoints(conf *InstallConfiguration) {
+	bootenv, _ := zfs.OpenDataset(fmt.Sprintf("%s/ROOT/%s", conf.RPoolName, conf.BEName))
+	bootenv.SetProperty("canmount", "noauto")
+	bootenv.SetProperty("mountpoint", "/")
+}
+
+func formatDrives(conf *InstallConfiguration) (err error) {
+	//TODO sanity checks if drive exists
+	//TODO Formating
+	return
+}
+
+func InstallOS(conf *InstallConfiguration) (err error) {
+	switch conf.MediaType {
+	case MediaTypeSolNetBoot:
+		//Get the files Needed to /tmp
+		getMediaFiles(conf)
+		installOSFromMediaFiles("/tmp")
+	case MediaTypeSolCDrom:
+	case MediaTypeSolUSB:
+		//Assume everything needed is located under /.cdrom
+		installOSFromMediaFiles("/.cdrom")
+	case MediaTypeIPS:
+		return common.NotSupportedError("IPS installation")
+	case MediaTypeZAP:
+		return common.NotSupportedError("ZAP installation")
+	case MediaTypeZImage:
+		return common.NotSupportedError("Image installation")
+	default:
+		return common.InvalidConfiguration("MediaType")
+	}
+
+	return
+}
+
+func getMediaFiles(conf *InstallConfiguration) {
+	util.Must(HTTPDownload(fmt.Sprintf("%s/%s", conf.MediaURL, solusrfileName), "/tmp"))
+	//TODO different locations on i86 and amd64
+	util.Must(HTTPDownload(fmt.Sprintf("%s/platform/i86pc/%s", conf.MediaURL, solmediarootfileName), "/tmp"))
+}
+
+func installOSFromMediaFiles(saveLocation string) {
+	os.Mkdir(altMountLocation, os.ModeDir)
+	util.Must(mount.MountLoopDevice("ufs", altMountLocation, fmt.Sprintf("%s/%s", saveLocation, solmediarootfileName)))
+	util.Must(mount.MountLoopDevice("hsfs", fmt.Sprintf("%s/usr", altMountLocation), fmt.Sprintf("%s/%s", saveLocation, solusrfileName)))
+	filelist := []string{
+		"bin",
+		"boot",
+		"kernel",
+		"lib",
+		"platform",
+		"root",
+		"sbin",
+		"usr",
+		"etc",
+		"var",
+		"zonelib",
+	}
+	for _, dir := range filelist {
+		filepath.Walk(fmt.Sprintf("%s/%s", altMountLocation, dir), walkCopy)
+	}
+}
