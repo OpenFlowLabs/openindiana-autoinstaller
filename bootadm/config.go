@@ -14,19 +14,19 @@ import (
 
 const (
 	BootLoaderTypeLoader = 0
-	BootLoaderTypeGrub = 1
+	BootLoaderTypeGrub   = 1
 )
 
 const loaderConfFile string = "/%s/boot/menu.lst"
 
 const loaderBootConfig string = `title {.BEName}
-bootfs {.RPoolName}/ROOT/{.BEName}`
+bootfs {.Rpool}/ROOT/{.BEName}`
 
 const grubBootConfig string = `default 0
 timeout 3
 title {.BEName}
-findroot (pool_{.RPoolName},0,a)
-bootfs {.RPoolName}/ROOT/{.BEName}
+findroot (pool_{.Rpool},0,a)
+bootfs {.Rpool}/ROOT/{.BEName}
 kernel$ /platform/i86pc/kernel/$ISADIR/unix -B $ZFS-BOOTFS
 module$ /platform/i86pc/$ISADIR/boot_archive`
 
@@ -35,21 +35,21 @@ const grubConfFile string = "/%s/boot/grub/menu.lst"
 const xenBootConfig string = `default 0
 timeout 3
 title {.BEName}
-findroot (pool_{.RPoolName},1,a)
-bootfs {.RPoolName}/ROOT/{.BEName}
+findroot (pool_{.Rpool},1,a)
+bootfs {.Rpool}/ROOT/{.BEName}
 kernel$ /platform/i86pc/kernel/amd64/unix -B $ZFS-BOOTFS
 module$ /platform/i86pc/amd64/boot_archive`
 
 type loaderType int
 
 type BootConfig struct {
-	Type loaderType
-	RPoolName string
-	BEName string
+	Type        loaderType
+	RPoolName   string
+	BEName      string
 	BootOptions []string //TODO Implement
 }
 
-func CreateBootConfigurationFiles(rootDir string, conf BootConfig) (err error){
+func CreateBootConfigurationFiles(rootDir string, conf BootConfig) (err error) {
 	if rootDir == "" {
 		rootDir = "/"
 	}

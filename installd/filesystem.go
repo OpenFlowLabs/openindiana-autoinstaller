@@ -7,19 +7,26 @@ import (
 
 	"git.wegmueller.it/opencloud/opencloud/zfs"
 	"git.wegmueller.it/opencloud/opencloud/zpool"
-	"github.com/satori/go.uuid"
-	"github.com/toasterson/mozaik/util"
 	"git.wegmueller.it/toasterson/glog"
+	"github.com/satori/go.uuid"
 )
 
 func createAndMountZpool(conf *InstallConfiguration, noop bool) (err error) {
-	if noop {
-		glog.Infof("Would Create Zpool %s with args %v with disks %v", conf.RPoolName, conf.PoolArgs, conf.PoolType)
-		return
-	}
-	_, err = zpool.CreatePool(conf.RPoolName, conf.PoolArgs, true, conf.PoolType, conf.Disks, true)
-	if err != nil {
-		return
+	for _, pool := range conf.Pools {
+		if pool.Type == "" {
+			pool.Type = "normal"
+		}
+		if noop {
+			glog.Infof("Would Create Zpool %s as %s with options %v on disks %v", pool.Name, pool.Type, pool.Options, pool.Disks)
+			continue
+		}
+		glog.Infof("Creating Pool %s as %s with option %v on %v", pool.Name, pool.Type, pool.Options, pool.Disks)
+		_, err = zpool.CreatePool(pool.Name, pool.Options, true, pool.Type, pool.Disks, true)
+		if err != nil {
+			glog.Errf("Failure creating Pool %s: %s", pool.Name, err)
+			return
+		}
+		glog.Infof("Success")
 	}
 	return
 }
@@ -37,45 +44,72 @@ func createDatasets(conf *InstallConfiguration, noop bool) error {
 	var err error
 	if conf.InstallType != "bootenv" {
 		if noop {
-			glog.Infof("Would create Dataset %s/ROOT with mountpoint=legacy", conf.RPoolName)
-			glog.Infof("Would create Dataset %s/swap with blocksize=4k,size=%s", conf.RPoolName, conf.SwapSize)
-			glog.Infof("Would create Dataset %s/dump with size=%s", conf.RPoolName, conf.DumpSize)
+			glog.Infof("Would create Dataset %s/ROOT with mountpoint=legacy", conf.Rpool)
+			glog.Infof("Would create Dataset %s/swap with blocksize=4k,size=%s", conf.Rpool, conf.SwapSize)
+			glog.Infof("Would create Dataset %s/dump with size=%s", conf.Rpool, conf.DumpSize)
 		} else {
-			if _, err = zfs.CreateDataset(fmt.Sprintf("%s/ROOT", conf.RPoolName), zfs.DatasetTypeFilesystem, map[string]string{"mountpoint": "legacy"}, true); err != nil {
+			glog.Infof("Creating %s/ROOT with mountpoint=legacy", conf.Rpool)
+			if _, err = zfs.CreateDataset(fmt.Sprintf("%s/ROOT", conf.Rpool), zfs.DatasetTypeFilesystem, map[string]string{"mountpoint": "legacy"}, true); err != nil {
+				glog.Errf("Failed: %s", err)
 				return err
 			}
-
-			if _, err = zfs.CreateDataset(fmt.Sprintf("%s/swap", conf.RPoolName), zfs.DatasetTypeVolume, map[string]string{"blocksize": "4k", "size": conf.SwapSize}, true); err != nil {
+			glog.Infof("Success")
+			glog.Infof("Creating SWAP Space at %s/swap with blocksize=4k,size=%s", conf.Rpool, conf.SwapSize)
+			if _, err = zfs.CreateDataset(fmt.Sprintf("%s/swap", conf.Rpool), zfs.DatasetTypeVolume, map[string]string{"blocksize": "4k", "size": conf.SwapSize}, true); err != nil {
+				glog.Errf("Failure: %s", err)
 				return err
 			}
-
-			if _, err = zfs.CreateDataset(fmt.Sprintf("%s/dump", conf.RPoolName), zfs.DatasetTypeVolume, map[string]string{"size": conf.DumpSize}, true); err != nil {
+			glog.Infof("Success")
+			glog.Infof("Creating Dump device at %s/dump with size=%s", conf.Rpool, conf.DumpSize)
+			if _, err = zfs.CreateDataset(fmt.Sprintf("%s/dump", conf.Rpool), zfs.DatasetTypeVolume, map[string]string{"size": conf.DumpSize}, true); err != nil {
+				glog.Errf("Failure: %s")
 				return err
 			}
+			glog.Infof("Success")
 		}
-
-		//TODO Zfs Layout Creation
+		for _, zfs_dataset := range conf.Datasets {
+			if noop {
+				glog.Infof("Would Create Dataset %s with options %v", zfs_dataset.Name, zfs_dataset.Options)
+				continue
+			}
+			glog.Infof("Creating %s with options %v", zfs_dataset.Name, zfs_dataset.Options)
+			if _, err := zfs.CreateDataset(zfs_dataset.Name, zfs_dataset.Type, zfs_dataset.Options, true); err != nil {
+				glog.Errf("Failure %s", err)
+				return err
+			}
+			glog.Infof("Success")
+		}
 	}
-	if conf.MediaType != MediaTypeZImage {
+	if conf.InstallImage.Type != MediaTypeZImage {
 		if noop {
-			glog.Infof("Would create Boot Environment %s/ROOT/%s", conf.RPoolName, conf.BEName)
+			glog.Infof("Would create Boot Environment %s/ROOT/%s", conf.Rpool, conf.BEName)
 		} else {
+			glog.Infof("Creating BootEnvironment %s/ROOT/%s", conf.Rpool, conf.BEName)
 			var bootenv *zfs.Dataset
-			if bootenv, err = zfs.CreateDataset(fmt.Sprintf("%s/ROOT/%s", conf.RPoolName, conf.BEName), zfs.DatasetTypeFilesystem, map[string]string{"mountpoint": altRootLocation}, true); err == nil {
+			if bootenv, err = zfs.CreateDataset(fmt.Sprintf("%s/ROOT/%s", conf.Rpool, conf.BEName), zfs.DatasetTypeFilesystem, map[string]string{"mountpoint": altRootLocation}, true); err == nil {
 				u1 := uuid.NewV4()
 				bootenv.SetProperty("org.opensolaris.libbe:uuid", u1.String())
+				glog.Infof("Success")
 			} else {
+				glog.Errf("Failure: %s", err)
 				return err
 			}
 		}
+	} else {
+		err := fmt.Errorf("media type %s not supported yet", MediaTypeZImage)
+		glog.Errf("%s", err)
+		return err
 	}
 	if noop {
-		glog.Infof("Would set bootfs to %s/ROOT/%s", conf.RPoolName, conf.BEName)
+		glog.Infof("Would set bootfs to %s/ROOT/%s", conf.Rpool, conf.BEName)
 	} else {
-		rpool := zpool.OpenPool(conf.RPoolName)
-		if err = rpool.SetProperty("bootfs", fmt.Sprintf("%s/ROOT/%s", conf.RPoolName, conf.BEName)); err != nil {
+		glog.Infof("Setting bootfs to %s/ROOT/%s", conf.Rpool, conf.BEName)
+		rpool := zpool.OpenPool(conf.Rpool)
+		if err = rpool.SetProperty("bootfs", fmt.Sprintf("%s/ROOT/%s", conf.Rpool, conf.BEName)); err != nil {
+			glog.Errf("Failure: %s", err)
 			return err
 		}
+		glog.Infof("Success")
 	}
 	return nil
 }

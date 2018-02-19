@@ -3,14 +3,12 @@
 package installd
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"strings"
 	"syscall"
 
-	"github.com/toasterson/mozaik/logger"
-	"github.com/toasterson/mozaik/util"
+	"git.wegmueller.it/toasterson/glog"
 )
 
 func walkCopy(path string, info os.FileInfo, err error) error {
@@ -20,18 +18,28 @@ func walkCopy(path string, info os.FileInfo, err error) error {
 		//Ignore Unexistent Directories
 		return nil
 	}
-	util.Must(err)
+	if err != nil {
+		return err
+	}
 	if info.IsDir() {
-		logger.Trace(fmt.Sprintf("Mkdir %s", dstpath))
-		util.Must(os.Mkdir(dstpath, info.Mode()))
+		glog.Tracef("Mkdir %s", dstpath)
+		if err := os.Mkdir(dstpath, info.Mode()); err != nil {
+			return err
+		}
 		srcStat := info.Sys().(*syscall.Stat_t)
-		util.Must(syscall.Chmod(dstpath, srcStat.Mode))
-		util.Must(syscall.Chown(dstpath, int(srcStat.Uid), int(srcStat.Gid)))
+		if err := syscall.Chmod(dstpath, srcStat.Mode); err != nil {
+			return err
+		}
+		if err := syscall.Chown(dstpath, int(srcStat.Uid), int(srcStat.Gid)); err != nil {
+			return err
+		}
 	} else if lsrcinfo.Mode()&os.ModeSymlink != 0 {
 		//We have a Symlink thus Create it on the Target
 		dstTarget, _ := os.Readlink(path)
-		logger.Trace(fmt.Sprintf("Creating Symlink %s -> %s", dstpath, dstTarget))
-		util.Must(os.Symlink(dstTarget, dstpath))
+		glog.Tracef("Creating Symlink %s -> %s", dstpath, dstTarget)
+		if err := os.Symlink(dstTarget, dstpath); err != nil {
+			return err
+		}
 	} else {
 		//We Have a regular File Copy it
 		go copyFileExact(path, info, dstpath)
@@ -40,18 +48,29 @@ func walkCopy(path string, info os.FileInfo, err error) error {
 }
 
 func copyFileExact(source string, srcInfo os.FileInfo, dest string) {
-	//logger.Trace(fmt.Sprintf("Copy %s -> %s", path, dest))
+	glog.Tracef("Copy %s -> %s", source, dest)
 	src, err := os.Open(source)
 	defer src.Close()
-	util.Must(err)
+	if err != nil {
+		glog.Errf("Cant open %s: %s", source, err)
+		return
+	}
 	dst, err := os.Create(dest)
 	defer dst.Close()
-	util.Must(err)
+	if err != nil {
+		glog.Errf("Cant open %s: %s", dest, err)
+		return
+	}
 	_, err = io.Copy(dst, src)
-	util.Must(err)
-	//util.Must(dst.Sync())
+	if err != nil {
+		glog.Errf("Can not copy %s -> %s: %s", source, dest, err)
+	}
+	//dst.Sync()
 	srcStat := srcInfo.Sys().(*syscall.Stat_t)
-	util.Must(syscall.Chmod(dest, srcStat.Mode))
-	util.Must(syscall.Chown(dest, int(srcStat.Uid), int(srcStat.Gid)))
-	//util.Must(os.Chtimes(dest, time.Unix(int64(srcStat.Atim.Sec),int64(srcStat.Atim.Nsec)), time.Unix(int64(srcStat.Mtim.Sec),int64(srcStat.Mtim.Nsec))))
+	err = syscall.Chmod(dest, srcStat.Mode)
+	err = syscall.Chown(dest, int(srcStat.Uid), int(srcStat.Gid))
+	if err != nil {
+		glog.Errf("Failed to set user/group/mode of %s: %s", dest, err)
+	}
+	//os.Chtimes(dest, time.Unix(int64(srcStat.Atim.Sec),int64(srcStat.Atim.Nsec)), time.Unix(int64(srcStat.Mtim.Sec),int64(srcStat.Mtim.Nsec)))
 }

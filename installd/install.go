@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"path"
+
 	"git.wegmueller.it/opencloud/installer/bootadm"
 	"git.wegmueller.it/opencloud/installer/mount"
 	"git.wegmueller.it/opencloud/opencloud/common"
@@ -19,6 +21,20 @@ const altMountLocation = "/mnt.install"
 const solusrfileName = "solaris.zlib"
 const solmediarootfileName = "boot_archive"
 
+var osfilelist = []string{
+	"bin",
+	"boot",
+	"kernel",
+	"lib",
+	"platform",
+	"root",
+	"sbin",
+	"usr",
+	"etc",
+	"var",
+	"zonelib",
+}
+
 func Install(conf InstallConfiguration, noop bool) error {
 	if err := createAndMountZpool(&conf, noop); err != nil {
 		return err
@@ -26,7 +42,7 @@ func Install(conf InstallConfiguration, noop bool) error {
 	if err := createDatasets(&conf, noop); err != nil {
 		return err
 	}
-	if err := installOS(&conf); err != nil {
+	if err := installOS(&conf, noop); err != nil {
 		return err
 	}
 	rootDir := altRootLocation
@@ -46,7 +62,7 @@ func Install(conf InstallConfiguration, noop bool) error {
 			return err
 		}
 	}
-	bconf := bootadm.BootConfig{Type: bootadm.BootLoaderTypeLoader, RPoolName: conf.RPoolName, BEName: conf.BEName, BootOptions: []string{}}
+	bconf := bootadm.BootConfig{Type: bootadm.BootLoaderTypeLoader, RPoolName: conf.Rpool, BEName: conf.BEName, BootOptions: []string{}}
 	if noop {
 		glog.Infof("Would apply the following boot config to disk: %v", bconf)
 	} else {
@@ -56,16 +72,24 @@ func Install(conf InstallConfiguration, noop bool) error {
 		if err := bootadm.UpdateBootArchive(rootDir); err != nil {
 			return err
 		}
-		if err := bootadm.InstallBootLoader(rootDir, conf.RPoolName); err != nil {
+		if err := bootadm.InstallBootLoader(rootDir, conf.Rpool); err != nil {
 			return err
 		}
 	}
 	//Remove SMF Repository to force regeneration of SMF at first boot.
 	//TODO Make own smf package which is a bit more powerfull
-	if err := os.Remove(fmt.Sprintf("/%s/etc/svc/repository.db", rootDir)); err != nil {
-		return err
+	smfRepo := filepath.Join(rootDir, "etc/svc/repository.db")
+	if noop {
+		glog.Infof("Would remove smf repo at %s", smfRepo)
+	} else {
+		glog.Infof("Removing smf repo at %s", smfRepo)
+		if err := os.Remove(smfRepo); err != nil {
+			glog.Errf("Failure: %s", err)
+			return err
+		}
+		glog.Infof("Success")
 	}
-	if err := fixZfsMountPoints(&conf, noop); err != nil{
+	if err := fixZfsMountPoints(&conf, noop); err != nil {
 		return err
 	}
 	return nil
@@ -75,43 +99,71 @@ func fixZfsMountPoints(conf *InstallConfiguration, noop bool) error {
 	var err error
 	var bootenv *zfs.Dataset
 	if noop {
-		glog.Infof("Would set canmount=noauto,mountpoint=/ on %s/ROOT/%s", conf.RPoolName, conf.BEName)
+		glog.Infof("Would set canmount=noauto,mountpoint=/ on %s/ROOT/%s", conf.Rpool, conf.BEName)
 		return nil
 	}
-	if bootenv, err = zfs.OpenDataset(fmt.Sprintf("%s/ROOT/%s", conf.RPoolName, conf.BEName)); err !=nil {
+	glog.Infof("Setting canmount=noauto,mountpoint=/ on %s/ROOT/%s", conf.Rpool, conf.BEName)
+	if bootenv, err = zfs.OpenDataset(path.Join(conf.Rpool, "ROOT", conf.BEName)); err != nil {
+		glog.Errf("Failure: %s")
 		return err
 	}
 	if err = bootenv.SetProperty("canmount", "noauto"); err != nil {
+		glog.Errf("Failure: %s")
 		return err
 	}
 	if err = bootenv.SetProperty("mountpoint", "/"); err != nil {
+		glog.Errf("Failure: %s")
 		return err
 	}
+	glog.Infof("Success")
 	return nil
 }
 
-func installOS(conf *InstallConfiguration) (err error) {
-	switch conf.MediaType {
+func installOS(conf *InstallConfiguration, noop bool) (err error) {
+	switch conf.InstallImage.Type {
 	case MediaTypeSolNetBoot:
 		//Get the files Needed to /tmp
-		if err = HTTPDownload(fmt.Sprintf("%s/%s", conf.MediaURL, solusrfileName), "/tmp"); err != nil {
-			return err
+		if noop {
+			glog.Infof("Would download / image from %s/platform/i86pc/%s", conf.InstallImage.URL, solmediarootfileName)
+			glog.Infof("Would Download /usr image from %s/%s", conf.InstallImage.URL, solusrfileName)
+		} else {
+			glog.Infof("Downloading %s/%s", conf.InstallImage.URL, solusrfileName)
+			if err = HTTPDownload(fmt.Sprintf("%s/%s", conf.InstallImage.URL, solusrfileName), "/tmp"); err != nil {
+				glog.Errf("Failure: %s", err)
+				return err
+			}
+			glog.Infof("Success")
+			glog.Infof("Downloading %s/platform/i86pc/%s", conf.InstallImage.URL, solmediarootfileName)
+			if err = HTTPDownload(fmt.Sprintf("%s/platform/i86pc/%s", conf.InstallImage.URL, solmediarootfileName), "/tmp"); err != nil {
+				glog.Errf("Failure: %s")
+				return err
+			}
+			glog.Infof("Success")
+			return installOSFromMediaFiles("/tmp")
 		}
-		if err = HTTPDownload(fmt.Sprintf("%s/platform/i86pc/%s", conf.MediaURL, solmediarootfileName), "/tmp"); err != nil {
-			return err
-		}
-		return installOSFromMediaFiles("/tmp")
 	case MediaTypeSolCDrom:
 	case MediaTypeSolUSB:
 		//Assume everything needed is located under /.cdrom
+		if noop {
+			glog.Infof("Would install from CDROM")
+			return
+		}
 		installOSFromMediaFiles("/.cdrom")
 	case MediaTypeZImage:
 		return common.NotSupportedError("Image installation")
 	case MediaTypeACI:
-		if err = HTTPDownload(fmt.Sprintf("%s/%s", conf.MediaURL, "image.aci"), "/tmp"); err != nil {
-			return err
+		if noop {
+			glog.Infof("Would Download %s", conf.InstallImage.URL)
+		} else {
+			glog.Infof("Downloading %s", conf.InstallImage.URL)
+			if err = HTTPDownload(conf.InstallImage.URL, "/tmp"); err != nil {
+				glog.Errf("Failure: %s", err)
+				return err
+			}
+			glog.Infof("Success")
 		}
 		//TODO ACI To Disk Writer
+		glog.Errf("Sadly not yet implemented")
 	default:
 		return common.InvalidConfiguration("MediaType")
 	}
@@ -119,29 +171,29 @@ func installOS(conf *InstallConfiguration) (err error) {
 }
 
 func installOSFromMediaFiles(saveLocation string) error {
+	glog.Infof("Installing OS from images under %s", saveLocation)
 	var err error
 	os.Mkdir(altMountLocation, os.ModeDir)
-	if err = mount.MountLoopDevice("ufs", altMountLocation, fmt.Sprintf("%s/%s", saveLocation, solmediarootfileName)); err != nil {
+	root_image := filepath.Join(saveLocation, solmediarootfileName)
+	glog.Infof("Mounting %s at %s", root_image, altMountLocation)
+	if err = mount.MountLoopDevice("ufs", altMountLocation, root_image); err != nil {
+		glog.Errf("Failure: %s", err)
 		return err
 	}
-	if err = mount.MountLoopDevice("hsfs", fmt.Sprintf("%s/usr", altMountLocation), fmt.Sprintf("%s/%s", saveLocation, solusrfileName)); err != nil {
+	glog.Infof("Success")
+	usrImage := filepath.Join(saveLocation, solusrfileName)
+	usrMnt := filepath.Join(altMountLocation, "usr")
+	glog.Infof("Mounting %s at %s", usrImage, usrMnt)
+	if err = mount.MountLoopDevice("hsfs", usrMnt, usrImage); err != nil {
+		glog.Errf("Failure: %s", err)
 		return err
 	}
-	filelist := []string{
-		"bin",
-		"boot",
-		"kernel",
-		"lib",
-		"platform",
-		"root",
-		"sbin",
-		"usr",
-		"etc",
-		"var",
-		"zonelib",
-	}
-	for _, dir := range filelist {
-		filepath.Walk(fmt.Sprintf("%s/%s", altMountLocation, dir), walkCopy)
+	glog.Infof("Success")
+	glog.Infof("Copying everything recursively from %v", osfilelist)
+	for _, dir := range osfilelist {
+		if err := filepath.Walk(fmt.Sprintf("%s/%s", altMountLocation, dir), walkCopy); err != nil {
+			return err
+		}
 	}
 	return nil
 }
