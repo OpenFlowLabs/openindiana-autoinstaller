@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"git.wegmueller.it/opencloud/installer/net"
 	"git.wegmueller.it/opencloud/opencloud/zfs"
 )
 
@@ -71,13 +72,14 @@ type ZPool struct {
 }
 
 type InstallConfiguration struct {
-	InstallType  string       `json:"install_type"`  //Possible options are efi, bootenv, fulldisk
-	Pools        []ZPool      `json:"pools"`         //What pools to create on which disks
-	InstallImage InstallImage `json:"install_image"` //See InstallImage struct
-	Datasets     []ZFSLayout  `json:"datasets"`      //The Partition Layout for ZFS. e.g Where is /var /etc and others located
-	Rpool        string       `json:"rpool"`         //Name of the root pool By Default(rpool)
-	BEName       string       `json:"be_name"`       //Name of the new Boot Environment defaults to openindiana
-	SwapSize     string       `json:"swap_size"`     //Size of the SWAP Partition defaults to 2g
-	DumpSize     string       `json:"dump_size"`     //Size of the Dump Partition defaults to swap_size
-	BootLoader   string       `json:"boot_loader"`   //Valid values are Loader and Grub
+	InstallType  string              `json:"install_type"`  //Possible options are efi, bootenv, fulldisk
+	Pools        []ZPool             `json:"pools"`         //What pools to create on which disks
+	InstallImage InstallImage        `json:"install_image"` //See InstallImage struct
+	Datasets     []ZFSLayout         `json:"datasets"`      //The Partition Layout for ZFS. e.g Where is /var /etc and others located
+	Rpool        string              `json:"rpool"`         //Name of the root pool By Default(rpool)
+	BEName       string              `json:"be_name"`       //Name of the new Boot Environment defaults to openindiana
+	SwapSize     string              `json:"swap_size"`     //Size of the SWAP Partition defaults to 2g
+	DumpSize     string              `json:"dump_size"`     //Size of the Dump Partition defaults to swap_size
+	BootLoader   string              `json:"boot_loader"`   //Valid values are Loader and Grub
+	Net          net.NetworkSettings `json:"net"`           //The Network Interfaces of the Box
 }
