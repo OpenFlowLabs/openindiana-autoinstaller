@@ -3,15 +3,14 @@
 package installd
 
 import (
-	"fmt"
 	"os"
 	"os/user"
 	"strconv"
 	"syscall"
 
-	"github.com/toasterson/mozaik/logger"
-	"git.wegmueller.it/toasterson/glog"
 	"path/filepath"
+
+	"git.wegmueller.it/toasterson/glog"
 )
 
 type DirConfig struct {
@@ -47,7 +46,7 @@ var defualtDirectories = []DirConfig{
 	{Name: "dev/zcons", Group: "sys"},
 }
 
-func makeSystemDirectories(rootDir string, dirs []DirConfig, noop bool) error{
+func makeSystemDirectories(rootDir string, dirs []DirConfig, noop bool) error {
 	dirs = append(dirs, defualtDirectories...)
 	for _, dir := range dirs {
 		path := filepath.Join(rootDir, dir.Name)

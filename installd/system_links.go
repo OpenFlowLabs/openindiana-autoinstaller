@@ -3,11 +3,10 @@
 package installd
 
 import (
-	"fmt"
 	"os"
 
-	"github.com/toasterson/mozaik/logger"
 	"path/filepath"
+
 	"git.wegmueller.it/toasterson/glog"
 )
 
@@ -23,7 +22,7 @@ var defaultLinks = []LinkConfig{
 	{Name: "dld", Target: "../devices/pseudo/dld@0:ctl"},
 }
 
-func makeDeviceLinks(rootDir string, links []LinkConfig, noop bool) error{
+func makeDeviceLinks(rootDir string, links []LinkConfig, noop bool) error {
 	links = append(links, defaultLinks...)
 	for _, link := range links {
 		path := filepath.Join(rootDir, "dev", link.Name)
