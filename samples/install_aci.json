@@ -15,11 +15,11 @@
   },
   "datasets": [
       {
-      "name": "rpool/shared/var",
-      "options": {
-        "compression": "gzip",
-        "mountpoint": "/var"
-      }
+        "name": "rpool/shared/var",
+        "options": {
+          "compression": "gzip",
+          "mountpoint": "/var"
+        }
       },
       {
         "name": "rpool/export",

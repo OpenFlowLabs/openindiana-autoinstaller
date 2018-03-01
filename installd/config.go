@@ -33,7 +33,7 @@ type ZFSLayout struct {
 	Options zfs.Properties  `json:"options"` //Options to create the Dataset with
 }
 
-func (layout ZFSLayout) UnmarshalJSON(input []byte) error {
+func (layout *ZFSLayout) UnmarshalJSON(input []byte) error {
 	var zfsLayoutJson map[string]*json.RawMessage
 	if err := json.Unmarshal(input, &zfsLayoutJson); err != nil {
 		return err

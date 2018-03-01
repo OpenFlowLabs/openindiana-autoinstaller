@@ -59,13 +59,13 @@ func createDatasets(conf *InstallConfiguration, noop bool) error {
 			}
 			glog.Infof("Success")
 		}
-		for _, zfs_dataset := range conf.Datasets {
+		for _, zfsDataset := range conf.Datasets {
 			if noop {
-				glog.Infof("Would Create Dataset %s with options %v", zfs_dataset.Name, zfs_dataset.Options)
+				glog.Infof("Would Create Dataset %s with options %v", zfsDataset.Name, zfsDataset.Options)
 				continue
 			}
-			glog.Infof("Creating %s with options %v", zfs_dataset.Name, zfs_dataset.Options)
-			if _, err := zfs.CreateDataset(zfs_dataset.Name, zfs_dataset.Type, zfs_dataset.Options, true); err != nil {
+			glog.Infof("Creating %s with options %v", zfsDataset.Name, zfsDataset.Options)
+			if _, err := zfs.CreateDataset(zfsDataset.Name, zfsDataset.Type, zfsDataset.Options, true); err != nil {
 				glog.Errf("Failure %s", err)
 				return err
 			}
