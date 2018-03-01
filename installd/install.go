@@ -199,10 +199,7 @@ func installOS(conf *InstallConfiguration, noop bool) (err error) {
 				if err = be.SetProperty("mountpoint", altRootLocation); err != nil {
 					return err
 				}
-				if mounted, _ := be.IsMounted(); mounted == false {
-					return be.Mount("")
-				}
-				return err
+				return be.Mount("")
 			}
 		}
 	default:
