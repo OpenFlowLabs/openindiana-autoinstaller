@@ -28,6 +28,7 @@ func makeDeviceLinks(rootDir string, links []LinkConfig, noop bool) error {
 		path := filepath.Join(rootDir, "dev", link.Name)
 		if noop {
 			glog.Infof("Would create device link %s -> %s", path, link.Target)
+			continue
 		}
 		err := os.Symlink(link.Target, path)
 		if err != nil {
