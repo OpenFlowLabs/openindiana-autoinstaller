@@ -117,6 +117,12 @@ func fixZfsMountPoints(conf *InstallConfiguration, noop bool) error {
 		glog.Errf("Failure: %s")
 		return err
 	}
+	if mounted, _ := bootenv.IsMounted(); mounted {
+		if err = bootenv.Unmount(); err != nil {
+			glog.Errf("Failure: %s")
+			return err
+		}
+	}
 	if err = bootenv.SetProperty("mountpoint", "/"); err != nil {
 		glog.Errf("Failure: %s")
 		return err
