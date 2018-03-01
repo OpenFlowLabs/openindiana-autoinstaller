@@ -20,13 +20,13 @@ const (
 const loaderConfFile = "/%s/boot/menu.lst"
 
 const loaderBootConfig = `title {{.BEName}}
-bootfs {{.Rpool}}/ROOT/{{.BEName}}`
+bootfs {{.RPoolName}}/ROOT/{{.BEName}}`
 
 const grubBootConfig = `default 0
 timeout 3
 title {{.BEName}}
-findroot (pool_{{.Rpool}},0,a)
-bootfs {{.Rpool}}/ROOT/{{.BEName}}
+findroot (pool_{{.RPoolName}},0,a)
+bootfs {{.RPoolName}}/ROOT/{{.BEName}}
 kernel$ /platform/i86pc/kernel/$ISADIR/unix -B $ZFS-BOOTFS
 module$ /platform/i86pc/$ISADIR/boot_archive`
 
@@ -35,8 +35,8 @@ const grubConfFile = "/%s/boot/grub/menu.lst"
 const xenBootConfig = `default 0
 timeout 3
 title {{.BEName}}
-findroot (pool_{{.Rpool}},1,a)
-bootfs {{.Rpool}}/ROOT/{{.BEName}}
+findroot (pool_{{.RPoolName}},1,a)
+bootfs {{.RPoolName}}/ROOT/{{.BEName}}
 kernel$ /platform/i86pc/kernel/amd64/unix -B $ZFS-BOOTFS
 module$ /platform/i86pc/amd64/boot_archive`
 
