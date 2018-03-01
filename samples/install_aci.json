@@ -14,26 +14,16 @@
     "url": "http://192.168.120.254/tmp/oi-minimal.aci"
   },
   "datasets": [
-      {
-        "name": "rpool/shared/var",
-        "options": {
-          "compression": "gzip",
-          "mountpoint": "/var"
-        }
-      },
-      {
-        "name": "rpool/export",
-        "options": {
-          "mountpoint": "/export"
-        }
-      },
-      {
-        "name": "rpool/export/home",
-        "type": "filesystem",
-        "options": {
-          "mountpoint": "/export/home"
-        }
+    {
+      "name": "rpool/export",
+      "options": {
+        "mountpoint": "/export"
       }
+    },
+    {
+      "name": "rpool/export/home",
+      "type": "filesystem"
+    }
   ],
   "boot_loader": "loader"
 }

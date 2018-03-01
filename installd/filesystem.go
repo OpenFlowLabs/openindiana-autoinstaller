@@ -78,7 +78,7 @@ func createDatasets(conf *InstallConfiguration, noop bool) error {
 		} else {
 			glog.Infof("Creating BootEnvironment %s/ROOT/%s", conf.Rpool, conf.BEName)
 			var bootenv *zfs.Dataset
-			if bootenv, err = zfs.CreateDataset(fmt.Sprintf("%s/ROOT/%s", conf.Rpool, conf.BEName), zfs.DatasetTypeFilesystem, map[string]string{"mountpoint": altRootLocation}, true); err == nil {
+			if bootenv, err = zfs.CreateDataset(conf.GetRootDataSetName(), zfs.DatasetTypeFilesystem, map[string]string{"mountpoint": altRootLocation}, false); err == nil {
 				u1, _ := uuid.NewV4()
 				bootenv.SetProperty("org.opensolaris.libbe:uuid", u1.String())
 				glog.Infof("Success")
