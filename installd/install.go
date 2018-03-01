@@ -183,7 +183,23 @@ func installOS(conf *InstallConfiguration, noop bool) (err error) {
 				}
 				mntpoint := be.Mountpoint
 				be.SetProperty("mountpoint", fmt.Sprintf("%s/rootfs", mntpoint))
-				return gnutar.ExtractOneInto("rootfs", mntpoint, aciRd)
+				err = gnutar.ExtractOneInto("rootfs", mntpoint, aciRd)
+				if err != nil {
+					return err
+				}
+				if err = be.Unmount(); err != nil {
+					return err
+				}
+				if err = os.RemoveAll(altRootLocation); err != nil {
+					return err
+				}
+				if err = be.SetProperty("mountpoint", altRootLocation); err != nil {
+					return err
+				}
+				if mounted, _ := be.IsMounted(); mounted == false {
+					return be.Mount("")
+				}
+				return
 			}
 		}
 	default:
