@@ -17,26 +17,26 @@ const (
 	BootLoaderTypeGrub   = 1
 )
 
-const loaderConfFile string = "/%s/boot/menu.lst"
+const loaderConfFile = "/%s/boot/menu.lst"
 
-const loaderBootConfig string = `title {.BEName}
-bootfs {.Rpool}/ROOT/{.BEName}`
+const loaderBootConfig = `title {{.BEName}}
+bootfs {{.Rpool}}/ROOT/{{.BEName}}`
 
-const grubBootConfig string = `default 0
+const grubBootConfig = `default 0
 timeout 3
-title {.BEName}
-findroot (pool_{.Rpool},0,a)
-bootfs {.Rpool}/ROOT/{.BEName}
+title {{.BEName}}
+findroot (pool_{{.Rpool}},0,a)
+bootfs {{.Rpool}}/ROOT/{{.BEName}}
 kernel$ /platform/i86pc/kernel/$ISADIR/unix -B $ZFS-BOOTFS
 module$ /platform/i86pc/$ISADIR/boot_archive`
 
-const grubConfFile string = "/%s/boot/grub/menu.lst"
+const grubConfFile = "/%s/boot/grub/menu.lst"
 
-const xenBootConfig string = `default 0
+const xenBootConfig = `default 0
 timeout 3
-title {.BEName}
-findroot (pool_{.Rpool},1,a)
-bootfs {.Rpool}/ROOT/{.BEName}
+title {{.BEName}}
+findroot (pool_{{.Rpool}},1,a)
+bootfs {{.Rpool}}/ROOT/{{.BEName}}
 kernel$ /platform/i86pc/kernel/amd64/unix -B $ZFS-BOOTFS
 module$ /platform/i86pc/amd64/boot_archive`
 
