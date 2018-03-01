@@ -4,7 +4,7 @@
     {
       "name": "rpool",
       "disks": [
-        "c5t0d0"
+        "c4t0d0"
       ]
     }
   ],

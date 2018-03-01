@@ -9,6 +9,8 @@ import (
 
 	"path"
 
+	"strings"
+
 	"git.wegmueller.it/opencloud/installer/bootadm"
 	"git.wegmueller.it/opencloud/installer/mount"
 	"git.wegmueller.it/opencloud/opencloud/common"
@@ -152,6 +154,7 @@ func installOS(conf *InstallConfiguration, noop bool) (err error) {
 	case MediaTypeZImage:
 		return common.NotSupportedError("Image installation")
 	case MediaTypeACI:
+	case strings.ToLower(MediaTypeACI):
 		if noop {
 			glog.Infof("Would Download %s", conf.InstallImage.URL)
 		} else {
