@@ -84,7 +84,7 @@ func Execute() {
 	}
 }
 
-func preRun(cmd *cobra.Command, args []string) {
+func preRun(_ *cobra.Command, _ []string) {
 	loglevel := viper.GetString("loglevel")
 	debug := viper.GetBool("debug")
 	config := viper.GetString("config")
@@ -127,16 +127,22 @@ func runInstall(configLocation string, noop bool) error {
 	var file []byte
 	var osReadErr error
 	var confObj installd.InstallConfiguration
+	var downloaded = false
 	if strings.HasPrefix(configLocation, "http") || strings.HasPrefix(configLocation, "https") {
 		var dlErr error
 		if configLocation, dlErr = installd.HTTPDownloadTo(configLocation, "/tmp"); dlErr != nil {
 			return dlErr
 		}
+		downloaded = true
 	} else if strings.HasPrefix(configLocation, "nfs") {
 		return fmt.Errorf("not Supported URL Type NFS")
 	}
-	_, configFileName := path.Split(configLocation)
-	if file, osReadErr = ioutil.ReadFile(filepath.Join("/tmp", configFileName)); osReadErr != nil {
+	if downloaded {
+		_, configFileName := path.Split(configLocation)
+		configLocation = filepath.Join("/tmp", configFileName)
+	}
+
+	if file, osReadErr = ioutil.ReadFile(configLocation); osReadErr != nil {
 		return osReadErr
 	}
 	if err := json.Unmarshal(file, &confObj); err != nil {
