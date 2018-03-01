@@ -30,12 +30,12 @@ func makeDeviceLinks(rootDir string, links []LinkConfig, noop bool) error {
 			glog.Infof("Would create device link %s -> %s", path, link.Target)
 			continue
 		}
-		if _, osexisterr := os.Lstat(path); os.IsExist(osexisterr) {
+		if _, osexisterr := os.Lstat(path); osexisterr == nil {
 			glog.Infof("Symlink %s already existing Distribution does not need it ignoring", path)
 			continue
 		}
 		err := os.Symlink(link.Target, path)
-		if err != nil {
+		if os.IsExist(err) {
 			return err
 		}
 	}
