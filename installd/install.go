@@ -202,7 +202,7 @@ func installOS(conf *InstallConfiguration, noop bool) (err error) {
 				if mounted, _ := be.IsMounted(); mounted == false {
 					return be.Mount("")
 				}
-				return
+				return err
 			}
 		}
 	default:
