@@ -193,6 +193,9 @@ func installOS(conf *InstallConfiguration, noop bool) (err error) {
 				if err = os.RemoveAll(altRootLocation); err != nil {
 					return err
 				}
+				if err = os.MkdirAll(altRootLocation, 0755); err != nil {
+					return err
+				}
 				if err = be.SetProperty("mountpoint", altRootLocation); err != nil {
 					return err
 				}
