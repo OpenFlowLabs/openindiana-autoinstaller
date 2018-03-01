@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"git.wegmueller.it/opencloud/installer/devprop"
 	"git.wegmueller.it/opencloud/installer/net"
 	"git.wegmueller.it/opencloud/opencloud/zfs"
 )
@@ -84,6 +85,25 @@ type InstallConfiguration struct {
 	Net          net.NetworkSettings `json:"net"`           //The Network Interfaces of the Box
 }
 
-func (i *InstallConfiguration) GetRootDataSetName() string {
-	return fmt.Sprintf("%s/ROOT/%s", i.Rpool, i.BEName)
+func (conf *InstallConfiguration) GetRootDataSetName() string {
+	return fmt.Sprintf("%s/ROOT/%s", conf.Rpool, conf.BEName)
+}
+
+func (conf *InstallConfiguration) FillUnSetValues() {
+	if conf.SwapSize == "" {
+		conf.SwapSize = "2g"
+	}
+	if conf.DumpSize == "" {
+		conf.DumpSize = conf.SwapSize
+	}
+	if conf.BEName == "" {
+		conf.BEName = "openindiana"
+	}
+	if conf.Rpool == "" {
+		conf.Rpool = "rpool"
+	}
+	//Assume that we want the Media URL from devprop if it is not in the config
+	if conf.InstallImage.URL == "" {
+		conf.InstallImage.URL = devprop.GetValue("install_media")
+	}
 }

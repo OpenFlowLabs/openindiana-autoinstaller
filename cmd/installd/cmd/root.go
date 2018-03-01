@@ -148,9 +148,6 @@ func runInstall(configLocation string, noop bool) error {
 	if err := json.Unmarshal(file, &confObj); err != nil {
 		return err
 	}
-	//Assume that we want the Media URL from devprop if it is not in the config
-	if confObj.InstallImage.URL == "" {
-		confObj.InstallImage.URL = devprop.GetValue("install_media")
-	}
+	confObj.FillUnSetValues()
 	return installd.Install(confObj, noop)
 }

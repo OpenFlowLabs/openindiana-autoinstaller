@@ -32,15 +32,7 @@ func createAndMountZpool(conf *InstallConfiguration, noop bool) (err error) {
 }
 
 func createDatasets(conf *InstallConfiguration, noop bool) error {
-	if conf.SwapSize == "" {
-		conf.SwapSize = "2g"
-	}
-	if conf.DumpSize == "" {
-		conf.DumpSize = conf.SwapSize
-	}
-	if conf.BEName == "" {
-		conf.BEName = "openindiana"
-	}
+
 	var err error
 	if conf.InstallType != "bootenv" {
 		if noop {
