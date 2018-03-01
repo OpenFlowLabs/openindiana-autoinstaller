@@ -49,7 +49,7 @@ var RootCmd = &cobra.Command{
 				os.Exit(0)
 			}
 			if err := runInstall(configFileName, noop); err != nil {
-				common.ExitWithErr("could not perform installation")
+				common.ExitWithErr("Error could not perform installation: %s", err)
 			}
 			os.Exit(0)
 		} else {
