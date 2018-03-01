@@ -88,8 +88,10 @@ func Install(conf InstallConfiguration, noop bool) error {
 	} else {
 		glog.Infof("Removing smf repo at %s", smfRepo)
 		if err := os.Remove(smfRepo); err != nil {
-			glog.Errf("Failure: %s", err)
-			return err
+			if !os.IsNotExist(err) {
+				glog.Errf("Failure: %s", err)
+				return err
+			}
 		}
 		glog.Infof("Success")
 	}
