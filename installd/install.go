@@ -14,6 +14,8 @@ import (
 	"git.wegmueller.it/opencloud/installer/bootadm"
 	"git.wegmueller.it/opencloud/installer/mount"
 	"git.wegmueller.it/opencloud/opencloud/common"
+	"git.wegmueller.it/opencloud/opencloud/gnutar"
+	"git.wegmueller.it/opencloud/opencloud/pod"
 	"git.wegmueller.it/opencloud/opencloud/zfs"
 	"git.wegmueller.it/toasterson/glog"
 )
@@ -165,8 +167,25 @@ func installOS(conf *InstallConfiguration, noop bool) (err error) {
 			}
 			glog.Infof("Success")
 		}
-		//TODO ACI To Disk Writer
-		glog.Errf("Sadly not yet implemented")
+		_, fileName := path.Split(conf.InstallImage.URL)
+		if aciFile, err := os.Open(filepath.Join("/tmp", fileName)); err != nil {
+			glog.Errf("Error Opening File: %s", err)
+			return err
+		} else {
+			if aciRd, err := pod.DecompressingReader(aciFile); err != nil {
+				glog.Errf("Error Opening ACI: %s", err)
+				return err
+			} else {
+				//TODO Implement Image checksum
+				be, err := zfs.OpenDataset(conf.GetRootDataSetName())
+				if err != nil {
+					return err
+				}
+				mntpoint := be.Mountpoint
+				be.SetProperty("mountpoint", fmt.Sprintf("%s/rootfs", mntpoint))
+				return gnutar.ExtractOneInto("rootfs", mntpoint, aciRd)
+			}
+		}
 	default:
 		return common.InvalidConfiguration("MediaType")
 	}

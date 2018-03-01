@@ -83,3 +83,7 @@ type InstallConfiguration struct {
 	BootLoader   string              `json:"boot_loader"`   //Valid values are Loader and Grub
 	Net          net.NetworkSettings `json:"net"`           //The Network Interfaces of the Box
 }
+
+func (i *InstallConfiguration) GetRootDataSetName() string {
+	return fmt.Sprintf("%s/ROOT/%s", i.Rpool, i.BEName)
+}
