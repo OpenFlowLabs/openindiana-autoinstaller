@@ -34,7 +34,7 @@ func createAndMountZpool(conf *InstallConfiguration, noop bool) (err error) {
 func createDatasets(conf *InstallConfiguration, noop bool) error {
 
 	var err error
-	if conf.InstallType != "bootenv" {
+	if conf.InstallType != InstallTypeBootEnv {
 		if noop {
 			glog.Infof("Would create Dataset %s/ROOT with mountpoint=legacy", conf.Rpool)
 			glog.Infof("Would create Dataset %s/swap with blocksize=4k,size=%s", conf.Rpool, conf.SwapSize)

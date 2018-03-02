@@ -5,8 +5,9 @@ import (
 	"fmt"
 
 	"git.wegmueller.it/opencloud/installer/devprop"
-	"git.wegmueller.it/opencloud/installer/net"
 	"git.wegmueller.it/opencloud/opencloud/zfs"
+	"git.wegmueller.it/toasterson/glog"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -73,16 +74,20 @@ type ZPool struct {
 }
 
 type InstallConfiguration struct {
-	InstallType  string              `json:"install_type"`  //Possible options are efi, bootenv, fulldisk
-	Pools        []ZPool             `json:"pools"`         //What pools to create on which disks
-	InstallImage InstallImage        `json:"install_image"` //See InstallImage struct
-	Datasets     []ZFSLayout         `json:"datasets"`      //The Partition Layout for ZFS. e.g Where is /var /etc and others located
-	Rpool        string              `json:"rpool"`         //Name of the root pool By Default(rpool)
-	BEName       string              `json:"be_name"`       //Name of the new Boot Environment defaults to openindiana
-	SwapSize     string              `json:"swap_size"`     //Size of the SWAP Partition defaults to 2g
-	DumpSize     string              `json:"dump_size"`     //Size of the Dump Partition defaults to swap_size
-	BootLoader   string              `json:"boot_loader"`   //Valid values are Loader and Grub
-	Net          net.NetworkSettings `json:"net"`           //The Network Interfaces of the Box
+	InstallType  string          `json:"install_type"`  //Possible options are efi, bootenv, fulldisk
+	Pools        []ZPool         `json:"pools"`         //What pools to create on which disks
+	InstallImage InstallImage    `json:"install_image"` //See InstallImage struct
+	Datasets     []ZFSLayout     `json:"datasets"`      //The Partition Layout for ZFS. e.g Where is /var /etc and others located
+	Rpool        string          `json:"rpool"`         //Name of the root pool By Default(rpool)
+	BEName       string          `json:"be_name"`       //Name of the new Boot Environment defaults to openindiana
+	SwapSize     string          `json:"swap_size"`     //Size of the SWAP Partition defaults to 2g
+	DumpSize     string          `json:"dump_size"`     //Size of the Dump Partition defaults to swap_size
+	BootLoader   string          `json:"boot_loader"`   //Valid values are Loader and Grub
+	Net          NetworkSettings `json:"net"`           //The Network Interfaces of the Box
+	TimeZone     string          `json:"time_zone"`     //Timezone to setup
+	Locale       string          `json:"locale"`        //Locale like en_US.UTF-8 or de_CH.UTF-8
+	RootPWClear  string          `json:"root_pw_clear"` //The clear string root password
+	RootPW       string          `json:"root_pw"`       //The hashed
 }
 
 func (conf *InstallConfiguration) GetRootDataSetName() string {
@@ -105,5 +110,16 @@ func (conf *InstallConfiguration) FillUnSetValues() {
 	//Assume that we want the Media URL from devprop if it is not in the config
 	if conf.InstallImage.URL == "" {
 		conf.InstallImage.URL = devprop.GetValue("install_media")
+	}
+
+	if conf.RootPW == "" {
+		if conf.RootPWClear != "" {
+			hash, err := bcrypt.GenerateFromPassword([]byte(conf.RootPWClear), bcrypt.DefaultCost)
+			if err != nil {
+				glog.Critf("Could not hash password: This should not happen. Will terminate now. %s", err)
+				panic(err)
+			}
+			conf.RootPW = string(hash)
+		}
 	}
 }

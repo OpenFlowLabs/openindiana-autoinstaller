@@ -1,4 +1,10 @@
-package net
+package installd
+
+const (
+	NetTypeIface     = "iface"
+	NetTypeEtherstub = "etherstub"
+	NetTypeVnic      = "vnic"
+)
 
 type NetworkInterface struct {
 	Name   string `json:"name"`   //Name the AddrObj or vnic gets
@@ -15,6 +21,10 @@ type Routes struct {
 }
 
 type NetworkSettings struct {
-	Routes     []Routes           `json:"routes"`     //The Routes
-	Interfaces []NetworkInterface `json:"interfaces"` //The devices Network interfaces
+	Routes     []Routes           `json:"routes"`      //The Routes
+	Interfaces []NetworkInterface `json:"interfaces"`  //The devices Network interfaces
+	DNSServers []string           `json:"dns_servers"` //DNS Servers as json array
+	DNSDomain  string             `json:"dns_domain"`  //DNS Domain
+	DNSSearch  []string           `json:"dns_search"`  //DNS Search
+	NFS4Domain string             `json:"nfs4_domain"` //NFS 4 DOmain to setup via sysding
 }

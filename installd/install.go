@@ -80,6 +80,7 @@ func Install(conf InstallConfiguration, noop bool) error {
 			return err
 		}
 	}
+	//TODO Use sysding
 	//Remove SMF Repository to force regeneration of SMF at first boot.
 	//TODO Make own smf package which is a bit more powerfull
 	smfRepo := filepath.Join(rootDir, "etc/svc/repository.db")
@@ -184,6 +185,13 @@ func installOS(conf *InstallConfiguration, noop bool) (err error) {
 				glog.Errf("Error Opening ACI: %s", err)
 				return err
 			} else {
+
+				err = createSysDingConf(conf, noop)
+				if err != nil {
+					glog.Errf("Could not create sysding.conf: %s", err)
+					return err
+				}
+
 				//TODO Implement Image checksum
 				be, err := zfs.OpenDataset(conf.GetRootDataSetName())
 				if err != nil {
@@ -220,9 +228,9 @@ func installOSFromMediaFiles(saveLocation string) error {
 	glog.Infof("Installing OS from images under %s", saveLocation)
 	var err error
 	os.Mkdir(altMountLocation, os.ModeDir)
-	root_image := filepath.Join(saveLocation, solmediarootfileName)
-	glog.Infof("Mounting %s at %s", root_image, altMountLocation)
-	if err = mount.MountLoopDevice("ufs", altMountLocation, root_image); err != nil {
+	rootImage := filepath.Join(saveLocation, solmediarootfileName)
+	glog.Infof("Mounting %s at %s", rootImage, altMountLocation)
+	if err = mount.MountLoopDevice("ufs", altMountLocation, rootImage); err != nil {
 		glog.Errf("Failure: %s", err)
 		return err
 	}
