@@ -80,7 +80,12 @@ func Install(conf InstallConfiguration, noop bool) error {
 			return err
 		}
 	}
-	//TODO Use sysding
+
+	err := createSysDingConf(&conf, noop)
+	if err != nil {
+		glog.Errf("Could not create sysding.conf: %s", err)
+		return err
+	}
 	//Remove SMF Repository to force regeneration of SMF at first boot.
 	//TODO Make own smf package which is a bit more powerfull
 	smfRepo := filepath.Join(rootDir, "etc/svc/repository.db")
@@ -185,13 +190,6 @@ func installOS(conf *InstallConfiguration, noop bool) (err error) {
 				glog.Errf("Error Opening ACI: %s", err)
 				return err
 			} else {
-
-				err = createSysDingConf(conf, noop)
-				if err != nil {
-					glog.Errf("Could not create sysding.conf: %s", err)
-					return err
-				}
-
 				//TODO Implement Image checksum
 				be, err := zfs.OpenDataset(conf.GetRootDataSetName())
 				if err != nil {
