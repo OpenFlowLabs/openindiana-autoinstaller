@@ -25,5 +25,32 @@
       "type": "filesystem"
     }
   ],
-  "boot_loader": "loader"
+  "boot_loader": "loader",
+  "net": {
+    "dns_domain": "test.local",
+    "dns_servers": [
+      "192.168.120.1"
+    ],
+    "dns_search": [
+      "search.local"
+    ],
+    "routes": [
+      {
+        "name": "DefaultGW",
+        "match": "default",
+        "gateway": "192.168.120.1"
+      }
+    ],
+    "interfaces": [
+      {
+        "type": "iface",
+        "name": "net1",
+        "device": "PRIMARY",
+        "ipv4": "192.168.120.20/24"
+      }
+    ]
+  },
+  "root_pw_clear": "openindiana",
+  "locale": "de_CH.UTF-8",
+  "time_zone": "Europe/Zurich"
 }

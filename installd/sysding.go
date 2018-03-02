@@ -29,12 +29,12 @@ func createSysDingConf(conf *InstallConfiguration, noop bool) error {
 		if inf.Type == NetTypeIface {
 			if inf.IPv4 != "" {
 				if inf.IPv4 == "dhcp" {
-					buffer.WriteString(fmt.Sprintf("setup_interface \"%s\" \"%s dhcp\" \"dhcp\"\n", inf.Name, inf.Device))
+					buffer.WriteString(fmt.Sprintf("setup_interface \"%s\" \"%s dhcp\" \"dhcp\"\n", inf.Device, inf.Name))
 				} else {
-					buffer.WriteString(fmt.Sprintf("setup_interface \"%s\" \"%s v4\" \"%s\"\n", inf.Name, inf.Device, inf.IPv4))
+					buffer.WriteString(fmt.Sprintf("setup_interface \"%s\" \"%s v4\" \"%s\"\n", inf.Device, inf.Name, inf.IPv4))
 				}
 			} else if inf.IPv6 != "" {
-				buffer.WriteString(fmt.Sprintf("setup_interface \"%s\" \"%s v6\" \"%s\"\n", inf.Name, inf.Device, inf.IPv6))
+				buffer.WriteString(fmt.Sprintf("setup_interface \"%s\" \"%s v6\" \"%s\"\n", inf.Device, inf.Name, inf.IPv6))
 			}
 		}
 	}
