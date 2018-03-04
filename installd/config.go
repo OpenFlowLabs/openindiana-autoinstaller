@@ -114,7 +114,7 @@ func (conf *InstallConfiguration) FillUnSetValues() {
 
 	if conf.RootPW == "" {
 		if conf.RootPWClear != "" {
-			hash, err := bcrypt.GenerateFromPassword([]byte(conf.RootPWClear), bcrypt.DefaultCost)
+			hash, err := bcrypt.GenerateFromPassword([]byte(conf.RootPWClear), 5)
 			if err != nil {
 				glog.Critf("Could not hash password: This should not happen. Will terminate now. %s", err)
 				panic(err)
