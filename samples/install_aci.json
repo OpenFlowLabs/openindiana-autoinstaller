@@ -52,5 +52,6 @@
   },
   "root_pw_clear": "openindiana",
   "locale": "de_CH.UTF-8",
-  "time_zone": "Europe/Zurich"
+  "time_zone": "Europe/Zurich",
+  "hostname": "openindiana"
 }

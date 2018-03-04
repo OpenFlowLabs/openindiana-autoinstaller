@@ -11,6 +11,8 @@ import (
 
 	"strings"
 
+	"io/ioutil"
+
 	"git.wegmueller.it/opencloud/installer/bootadm"
 	"git.wegmueller.it/opencloud/installer/mount"
 	"git.wegmueller.it/opencloud/opencloud/common"
@@ -86,6 +88,8 @@ func Install(conf InstallConfiguration, noop bool) error {
 		glog.Errf("Could not create sysding.conf: %s", err)
 		return err
 	}
+
+	ioutil.WriteFile(filepath.Join(altRootLocation, "/etc/nodename"), []byte(conf.Hostname), 0644)
 	//Remove SMF Repository to force regeneration of SMF at first boot.
 	//TODO Make own smf package which is a bit more powerfull
 	smfRepo := filepath.Join(rootDir, "etc/svc/repository.db")
