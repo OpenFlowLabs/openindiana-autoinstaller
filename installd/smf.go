@@ -62,7 +62,7 @@ const siteTemplate = `<service_bundle type='profile' name='installd_profile'>
     <service name='system/keymap' version='1' type='service'>
         <instance name='default'>
             <property_group name='keymap' type='system'>
-                <propval name='layout' type='astring' value='{{.keymap}}' />
+                <propval name='layout' type='astring' value='{{.Keymap}}' />
             </property_group>
         </instance>
     </service>
