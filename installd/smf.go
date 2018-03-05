@@ -39,6 +39,7 @@ func hookUpServiceManifests(conf *InstallConfiguration, rootDir string, noop boo
 				glog.Errf("Could not create link %s -> %s: %s", pPath, target, err)
 				continue
 			}
+			return err
 		}
 	}
 	tplSiteXML, err := template.New("SiteXML").Parse(siteTemplate)
