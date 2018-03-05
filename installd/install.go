@@ -89,7 +89,7 @@ func Install(conf InstallConfiguration, noop bool) error {
 		return err
 	}
 
-	ioutil.WriteFile(filepath.Join(altRootLocation, "/etc/nodename"), []byte(conf.Hostname), 0644)
+	ioutil.WriteFile(filepath.Join(rootDir, "etc/nodename"), []byte(conf.Hostname), 0644)
 	//Remove SMF Repository to force regeneration of SMF at first boot.
 	//TODO Make own smf package which is a bit more powerfull
 	smfRepo := filepath.Join(rootDir, "etc/svc/repository.db")
@@ -105,6 +105,11 @@ func Install(conf InstallConfiguration, noop bool) error {
 		}
 		glog.Infof("Success")
 	}
+
+	if err := hookUpServiceManifests(&conf, rootDir, noop); err != nil {
+		return err
+	}
+
 	if err := fixZfsMountPoints(&conf, noop); err != nil {
 		return err
 	}

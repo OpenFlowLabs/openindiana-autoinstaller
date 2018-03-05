@@ -89,6 +89,7 @@ type InstallConfiguration struct {
 	RootPWClear  string          `json:"root_pw_clear"` //The clear string root password
 	RootPW       string          `json:"root_pw"`       //The hashed
 	Hostname     string          `json:"hostname"`      //The Hostname of the machine
+	Keymap       string          `json:"keymap"`        //Keymap the Machine will have e.g. Swiss-German
 }
 
 func (conf *InstallConfiguration) GetRootDataSetName() string {

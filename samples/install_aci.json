@@ -53,5 +53,6 @@
   "root_pw_clear": "openindiana",
   "locale": "de_CH.UTF-8",
   "time_zone": "Europe/Zurich",
-  "hostname": "openindiana"
+  "hostname": "openindiana",
+  "keymap": "Swiss-German"
 }
