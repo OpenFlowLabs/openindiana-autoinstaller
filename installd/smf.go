@@ -43,6 +43,7 @@ func hookUpServiceManifests(conf *InstallConfiguration, rootDir string, noop boo
 			return err
 		}
 	}
+	os.Chdir("/tmp")
 	tplSiteXML, err := template.New("SiteXML").Parse(siteTemplate)
 	if err != nil {
 		return err
