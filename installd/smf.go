@@ -28,21 +28,20 @@ var defaultProfileFiles = map[string]string{
 }
 
 func hookUpServiceManifests(conf *InstallConfiguration, rootDir string, noop bool) error {
-	os.Chdir(filepath.Join(rootDir, "etc/svc/profile"))
 	for pFile, target := range defaultProfileFiles {
+		pPath := filepath.Join(rootDir, pFile)
 		if noop {
-			glog.Infof("Linking %s -> %s", pFile, target)
+			glog.Infof("Linking %s -> %s", pPath, target)
 			continue
 		}
-		if err := os.Symlink(target, pFile); err != nil {
+		if err := os.Symlink(target, pPath); err != nil {
 			if !os.IsExist(err) {
-				glog.Errf("Could not create link %s -> %s: %s", pFile, target, err)
+				glog.Errf("Could not create link %s -> %s: %s", pPath, target, err)
 				continue
 			}
 			return err
 		}
 	}
-	os.Chdir("/tmp")
 	tplSiteXML, err := template.New("SiteXML").Parse(siteTemplate)
 	if err != nil {
 		return err
