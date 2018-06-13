@@ -30,10 +30,13 @@ var RootCmd = &cobra.Command{
 		if viper.GetBool("daemon") || viper.GetBool("interactive") {
 			// Running in Daemon mode means we look to see if we can grab the config and try to execute what was passed to us.
 			//configFileName := viper.GetString("config")
-			server := installservd.New()
+			server, err := installservd.New()
+			if err != nil {
+				common.ExitWithErr("Could not initialize server: %s", err)
+			}
 			listen := viper.GetString("listen")
 			cert := viper.GetString("cert")
-			if err := server.HandleRPC(viper.GetString("socket")); err != nil {
+			if err := server.StartRPC(viper.GetString("socket")); err != nil {
 				common.ExitWithErr("Could not open rpc Server: %s", err)
 			}
 			if cert == "auto" {

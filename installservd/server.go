@@ -5,20 +5,24 @@ import (
 
 	"net"
 
+	"net/rpc"
+	"strings"
+
 	"github.com/labstack/echo"
 	"github.com/spf13/viper"
 )
 
 var (
-	serverDirectories = []string{"config", "files", "tmp"}
+	serverDirectories = []string{"config", "assets", "tmp"}
 )
 
 type Installservd struct {
-	Echo       *echo.Echo
-	ServerHome string
-	Socket     net.Listener
-	SocketPath string
-	runRPC     bool
+	Echo        *echo.Echo
+	ServerHome  string
+	Socket      net.Listener
+	SocketPath  string
+	RPCReceiver *InstallservdRPCReceiver
+	runRPC      bool
 }
 
 func New() (*Installservd, error) {
@@ -45,6 +49,50 @@ func (i *Installservd) setupWebServer() error {
 			os.Mkdir(dir, 0755)
 		}
 	}
-	i.Echo.Static("/files", "files")
+	i.Echo.Static("/assets", "assets")
 	return nil
+}
+
+func (i *Installservd) StartRPC(sock string) (err error) {
+	i.SocketPath = sock
+	i.RPCReceiver = &InstallservdRPCReceiver{server: i}
+	if _, err := os.Stat(i.SocketPath); !os.IsNotExist(err) {
+		//Best effort
+		err = os.Remove(sock)
+		if err != nil {
+			return err
+		}
+	}
+	socket, err := net.Listen("unix", sock)
+	if err != nil {
+		return err
+	}
+	i.Socket = socket
+	rpcSrv := rpc.NewServer()
+	rpcSrv.Register(i.RPCReceiver)
+	go func() {
+		for i.runRPC {
+			conn, err := i.Socket.Accept()
+			if err != nil {
+				if strings.Contains(err.Error(), "use of closed network connection") {
+					i.runRPC = false
+				} else {
+					i.Echo.Logger.Printf("rpc.Serve: accept: %s", err.Error())
+				}
+				return
+			}
+			go rpcSrv.ServeConn(conn)
+		}
+	}()
+	return nil
+}
+
+func (i *Installservd) StopRPC() error {
+	i.runRPC = false
+	err := i.Socket.Close()
+	if err != nil {
+		os.Remove(i.SocketPath)
+		return err
+	}
+	return os.Remove(i.SocketPath)
 }
