@@ -31,6 +31,9 @@ func New() (*Installservd, error) {
 		Echo:       echo.New(),
 		ServerHome: srvHome,
 	}
+	if err := i.LoadProfilesFromDisk(); err != nil {
+		return nil, err
+	}
 	if err := i.setupWebServer(); err != nil {
 		return nil, err
 	}
