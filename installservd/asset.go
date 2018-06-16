@@ -36,7 +36,7 @@ type Asset struct {
 }
 
 func (i *Installservd) getAssetPath(asset Asset) string {
-	return filepath.Join(i.ServerHome, "assets", asset.ID.String())
+	return filepath.Join(i.ServerHome, "assets", asset.Path)
 }
 
 func (i *Installservd) SaveAssetsToDisk() error {

@@ -1,12 +1,12 @@
 package installservd
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"io/ioutil"
 
 	"git.wegmueller.it/opencloud/installer/fileutils"
 	"github.com/satori/go.uuid"
@@ -91,27 +91,19 @@ func (r *InstallservdRPCReceiver) AddAsset(args AddAssetArg, reply *string) (err
 	}
 
 	tmpFileName := filepath.Join(r.server.ServerHome, "tmp", args.Name)
-	var tmpFile *os.File
 
 	if strings.Contains(args.Source, "http") {
 		//Download Asset from HTTP and Update Source to point to local file
 		if err = fileutils.HTTPDownload(args.Source, tmpFileName); err != nil {
 			return
 		}
-		if tmpFile, err = os.Open(tmpFileName); err != nil {
-			return
-		}
 	} else {
-		if tmpFile, err = os.Create(tmpFileName); err != nil {
-			return
-		}
-		if _, err = io.Copy(bytes.NewBuffer(args.Content), tmpFile); err != nil {
+		if err = ioutil.WriteFile(tmpFileName, args.Content, 0644); err != nil {
 			return
 		}
 	}
 
 	defer func() {
-		tmpFile.Close()
 		os.Remove(tmpFileName)
 	}()
 
@@ -122,12 +114,13 @@ func (r *InstallservdRPCReceiver) AddAsset(args AddAssetArg, reply *string) (err
 		Type: getAssetTypeByName(args.Type),
 	}
 
-	var finalFile *os.File
-	if finalFile, err = os.Create(r.server.getAssetPath(asset)); err != nil {
+	path := r.server.getAssetPath(asset)
+	dirPath, _ := filepath.Split(path)
+	if err = os.MkdirAll(dirPath, 0755); err != nil {
 		return
 	}
 
-	if _, err = io.Copy(tmpFile, finalFile); err != nil {
+	if _, err = fileutils.CopyFile(tmpFileName, path); err != nil {
 		return
 	}
 

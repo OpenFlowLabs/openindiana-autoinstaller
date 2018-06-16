@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 	"github.com/spf13/viper"
 )
 
@@ -55,7 +56,10 @@ func (i *Installservd) setupWebServer() error {
 			os.Mkdir(dir, 0755)
 		}
 	}
-	i.Echo.Static("/assets", "assets")
+	i.Echo.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+		Root:   "assets",
+		Browse: true,
+	}))
 	return nil
 }
 
