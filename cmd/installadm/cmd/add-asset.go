@@ -46,8 +46,6 @@ var AddAssetCommand = &cobra.Command{
 			common.ExitWithErr("Could not conntact installservd: ", err)
 		}
 		fmt.Println(reply)
-
-		fmt.Println(reply)
 		os.Exit(0)
 	},
 }

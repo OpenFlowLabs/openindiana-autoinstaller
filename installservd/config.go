@@ -14,7 +14,9 @@ func saveToDisk(home, fileName string, obj interface{}) error {
 	path := filepath.Join(home, "config", fileName)
 	pathBackup := path + ".bak"
 	if _, err = fileutils.CopyFile(path, pathBackup); err != nil {
-		return err
+		if !os.IsNotExist(err) {
+			return err
+		}
 	}
 	if fileObj, err = os.Create(path); err != nil {
 		return err

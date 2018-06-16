@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"git.wegmueller.it/opencloud/installer/fileutils"
+	"github.com/satori/go.uuid"
 )
 
 type InstallservdRPCReceiver struct {
@@ -109,7 +110,9 @@ func (r *InstallservdRPCReceiver) AddAsset(args AddAssetArg, reply *string) erro
 		os.Remove(tmpFileName)
 	}()
 
+	assetUUID, _ := uuid.NewV4()
 	asset := Asset{
+		ID:   assetUUID,
 		Path: args.Path,
 		Type: getAssetTypeByName(args.Type),
 	}
@@ -125,7 +128,7 @@ func (r *InstallservdRPCReceiver) AddAsset(args AddAssetArg, reply *string) erro
 		return err
 	}
 
-	Assets[args.Name] = &asset
+	Assets[args.Path] = &asset
 	if err := r.server.SaveAssetsToDisk(); err != nil {
 		*reply = err.Error()
 		return err

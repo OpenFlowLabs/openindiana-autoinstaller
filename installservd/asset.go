@@ -1,6 +1,10 @@
 package installservd
 
-import "path/filepath"
+import (
+	"path/filepath"
+
+	"github.com/satori/go.uuid"
+)
 
 var Assets map[string]*Asset
 
@@ -26,12 +30,13 @@ func getAssetTypeByName(name string) AssetType {
 const assetFileName = "assets.json"
 
 type Asset struct {
+	ID   uuid.UUID
 	Path string
 	Type AssetType
 }
 
 func (i *Installservd) getAssetPath(asset Asset) string {
-	return filepath.Join(i.ServerHome, "assets", asset.Path)
+	return filepath.Join(i.ServerHome, "assets", asset.ID.String())
 }
 
 func (i *Installservd) SaveAssetsToDisk() error {
