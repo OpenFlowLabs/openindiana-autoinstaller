@@ -62,23 +62,32 @@ type AddAssetArg struct {
 	Type    string
 }
 
-func (r *InstallservdRPCReceiver) AddAsset(args AddAssetArg, reply *string) error {
-	var err error
+func (r *InstallservdRPCReceiver) AddAsset(args AddAssetArg, reply *string) (err error) {
+
+	defer func() {
+		if err != nil {
+			*reply = err.Error()
+		} else {
+			*reply = "Operation suceeded"
+		}
+	}()
+
 	if args.Source == "" && args.Content == nil {
-		err = fmt.Errorf("either Source or Content needs to be present")
-		*reply = err.Error()
-		return err
+		return fmt.Errorf("either Source or Content needs to be present")
 	}
 
 	if args.Path == "" && args.Name == "" {
-		err = fmt.Errorf("either Name or Path need to be defined or the Asset can not be saved")
-		*reply = err.Error()
-		return err
+		return fmt.Errorf("either Name or Path need to be defined or the Asset can not be saved")
 	}
 
 	if args.Name == "" {
 		split := strings.Split(args.Path, "/")
 		args.Name = split[len(split)-1]
+	}
+
+	//Sanity Check No two assets with the same name should exist.
+	if _, ok := Assets[args.Path]; ok {
+		return fmt.Errorf("asset %s already exists", args.Path)
 	}
 
 	tmpFileName := filepath.Join(r.server.ServerHome, "tmp", args.Name)
@@ -87,21 +96,17 @@ func (r *InstallservdRPCReceiver) AddAsset(args AddAssetArg, reply *string) erro
 	if strings.Contains(args.Source, "http") {
 		//Download Asset from HTTP and Update Source to point to local file
 		if err = fileutils.HTTPDownload(args.Source, tmpFileName); err != nil {
-			*reply = err.Error()
-			return err
+			return
 		}
 		if tmpFile, err = os.Open(tmpFileName); err != nil {
-			*reply = err.Error()
-			return err
+			return
 		}
 	} else {
 		if tmpFile, err = os.Create(tmpFileName); err != nil {
-			*reply = err.Error()
-			return err
+			return
 		}
 		if _, err = io.Copy(bytes.NewBuffer(args.Content), tmpFile); err != nil {
-			*reply = err.Error()
-			return err
+			return
 		}
 	}
 
@@ -119,22 +124,17 @@ func (r *InstallservdRPCReceiver) AddAsset(args AddAssetArg, reply *string) erro
 
 	var finalFile *os.File
 	if finalFile, err = os.Create(r.server.getAssetPath(asset)); err != nil {
-		*reply = err.Error()
-		return err
+		return
 	}
 
 	if _, err = io.Copy(tmpFile, finalFile); err != nil {
-		*reply = err.Error()
-		return err
+		return
 	}
 
 	Assets[args.Path] = &asset
 	if err := r.server.SaveAssetsToDisk(); err != nil {
-		*reply = err.Error()
 		return err
 	}
-
-	*reply = "success"
 	return nil
 }
 
