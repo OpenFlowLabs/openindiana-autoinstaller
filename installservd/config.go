@@ -41,6 +41,7 @@ func loadFromDisk(home, fileName string, obj interface{}, init func()) error {
 			// We have no Config for that. This can be expected
 			// Just initialize as empty
 			init()
+			return nil
 		} else {
 			return err
 		}

@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 
 	"git.wegmueller.it/opencloud/installer/bootadm"
+	"git.wegmueller.it/opencloud/installer/fileutils"
 	"git.wegmueller.it/opencloud/installer/mount"
 	"git.wegmueller.it/opencloud/opencloud/common"
 	"git.wegmueller.it/opencloud/opencloud/gnutar"
@@ -155,13 +156,13 @@ func installOS(conf *InstallConfiguration, noop bool) (err error) {
 			glog.Infof("Would Download /usr image from %s/%s", conf.InstallImage.URL, solusrfileName)
 		} else {
 			glog.Infof("Downloading %s/%s", conf.InstallImage.URL, solusrfileName)
-			if err = HTTPDownload(fmt.Sprintf("%s/%s", conf.InstallImage.URL, solusrfileName), "/tmp"); err != nil {
+			if err = fileutils.HTTPDownload(fmt.Sprintf("%s/%s", conf.InstallImage.URL, solusrfileName), "/tmp"); err != nil {
 				glog.Errf("Failure: %s", err)
 				return err
 			}
 			glog.Infof("Success")
 			glog.Infof("Downloading %s/platform/i86pc/%s", conf.InstallImage.URL, solmediarootfileName)
-			if err = HTTPDownload(fmt.Sprintf("%s/platform/i86pc/%s", conf.InstallImage.URL, solmediarootfileName), "/tmp"); err != nil {
+			if err = fileutils.HTTPDownload(fmt.Sprintf("%s/platform/i86pc/%s", conf.InstallImage.URL, solmediarootfileName), "/tmp"); err != nil {
 				glog.Errf("Failure: %s")
 				return err
 			}
@@ -184,7 +185,7 @@ func installOS(conf *InstallConfiguration, noop bool) (err error) {
 			glog.Infof("Would Download %s", conf.InstallImage.URL)
 		} else {
 			glog.Infof("Downloading %s", conf.InstallImage.URL)
-			if err = HTTPDownload(conf.InstallImage.URL, "/tmp"); err != nil {
+			if err = fileutils.HTTPDownload(conf.InstallImage.URL, "/tmp"); err != nil {
 				glog.Errf("Failure: %s", err)
 				return err
 			}

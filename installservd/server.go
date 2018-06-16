@@ -34,6 +34,9 @@ func New() (*Installservd, error) {
 	if err := i.LoadProfilesFromDisk(); err != nil {
 		return nil, err
 	}
+	if err := i.LoadAssetsFromDisk(); err != nil {
+		return nil, err
+	}
 	if err := i.setupWebServer(); err != nil {
 		return nil, err
 	}
@@ -59,6 +62,7 @@ func (i *Installservd) setupWebServer() error {
 func (i *Installservd) StartRPC(sock string) (err error) {
 	i.SocketPath = sock
 	i.RPCReceiver = &InstallservdRPCReceiver{server: i}
+	i.runRPC = true
 	if _, err := os.Stat(i.SocketPath); !os.IsNotExist(err) {
 		//Best effort
 		err = os.Remove(sock)

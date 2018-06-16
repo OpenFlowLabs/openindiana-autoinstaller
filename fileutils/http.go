@@ -1,11 +1,10 @@
-package installd
+package fileutils
 
 import (
-	"fmt"
 	"time"
 
+	"git.wegmueller.it/toasterson/glog"
 	"github.com/cavaliercoder/grab"
-	"github.com/toasterson/mozaik/logger"
 )
 
 func HTTPDownload(url string, location string) (err error) {
@@ -28,7 +27,7 @@ func HTTPDownloadTo(url string, location string) (file string, err error) {
 func doDownload(request *grab.Request) (resp *grab.Response) {
 	client := grab.NewClient()
 	// start download
-	logger.Info(fmt.Sprintf("Downloading %v...", request.URL()))
+	glog.Infof("Downloading %v...", request.URL())
 	resp = client.Do(request)
 
 	// start UI loop
@@ -39,10 +38,10 @@ ProgressLoop:
 	for {
 		select {
 		case <-t.C:
-			logger.Info(fmt.Sprintf("  transferred %v / %v bytes (%.2f%%)",
+			glog.Infof("  transferred %v / %v bytes (%.2f%%)",
 				resp.BytesComplete(),
 				resp.Size,
-				100*resp.Progress()))
+				100*resp.Progress())
 
 		case <-resp.Done:
 			// download is complete
@@ -50,6 +49,6 @@ ProgressLoop:
 		}
 	}
 
-	logger.Info(fmt.Sprintf("Download saved to %v", resp.Filename))
+	glog.Infof("Download saved to %v", resp.Filename)
 	return
 }

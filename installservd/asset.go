@@ -1,8 +1,6 @@
 package installservd
 
-import (
-	"io"
-)
+import "path/filepath"
 
 var Assets map[string]*Asset
 
@@ -10,11 +8,20 @@ type AssetType int
 
 const (
 	AssetTypeImage AssetType = iota
-	AssetTypeConfig
-	AssetTypeScript
-	AssetTypeGeneric
+	AssetTypeBinary
 	AssetTypeTemplate
 )
+
+func getAssetTypeByName(name string) AssetType {
+	switch name {
+	case "image":
+		return AssetTypeImage
+	case "template":
+		return AssetTypeTemplate
+	default:
+		return AssetTypeBinary
+	}
+}
 
 const assetFileName = "assets.json"
 
@@ -23,12 +30,8 @@ type Asset struct {
 	Type AssetType
 }
 
-func DownloadAsset(source string, target io.Writer) error {
-
-}
-
-func InstallAsset(src io.Reader, target Asset) error {
-
+func (i *Installservd) getAssetPath(asset Asset) string {
+	return filepath.Join(i.ServerHome, "assets", asset.Path)
 }
 
 func (i *Installservd) SaveAssetsToDisk() error {
