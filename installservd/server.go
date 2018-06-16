@@ -8,8 +8,10 @@ import (
 	"net/rpc"
 	"strings"
 
+	"net/http"
+	"path/filepath"
+
 	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
 	"github.com/spf13/viper"
 )
 
@@ -56,10 +58,16 @@ func (i *Installservd) setupWebServer() error {
 			os.Mkdir(dir, 0755)
 		}
 	}
-	i.Echo.Use(middleware.StaticWithConfig(middleware.StaticConfig{
-		Root:   "assets",
-		Browse: true,
-	}))
+	t := &Template{}
+	t.Load(i)
+	i.Echo.Renderer = t
+	fs := http.FileServer(http.Dir(filepath.Join(i.ServerHome, "assets")))
+	i.Echo.GET("/assets/*", echo.WrapHandler(http.StripPrefix("/assets/", fs)))
+	i.Echo.GET("/profiles", listProfiles)
+	i.Echo.GET("/profiles/:name", getProfile)
+	i.Echo.GET("/profiles/:name/config.json", getProfileConfig)
+	i.Echo.GET("/profiles/:name/:template", getTemplate(i))
+
 	return nil
 }
 
