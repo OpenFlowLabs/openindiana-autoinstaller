@@ -10,8 +10,8 @@
   ],
   "pool_type": "normal",
   "install_image": {
-    "type": "aci",
-    "url": "http://192.168.120.254/tmp/oi-minimal.aci"
+    "type": "tgz",
+    "url": "http://192.168.120.254/tmp/oi-minimal.tar.gz"
   },
   "datasets": [
     {

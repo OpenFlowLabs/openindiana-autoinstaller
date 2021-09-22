@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="8f59f56d-ed7b-4314-ac59-baea7a80c49c" name="Changes" comment="Massive source overhaul to update to current golang">
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/openindiana-autoinstaller.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/installd/error.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bootadm/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/bootadm/config.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bootadm/install.go" beforeDir="false" afterPath="$PROJECT_DIR$/bootadm/install.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bootadm/update-archive.go" beforeDir="false" afterPath="$PROJECT_DIR$/bootadm/update-archive.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/installadm/cmd/add-asset.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/installadm/cmd/add-asset.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/installadm/cmd/add-profile.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/installadm/cmd/add-profile.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/installadm/cmd/editor.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/installadm/cmd/editor.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/installadm/cmd/list-profiles.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/installadm/cmd/list-profiles.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/installadm/cmd/ping.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/installadm/cmd/ping.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/installadm/installadm.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/installadm/installadm.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/installd/cmd/install-daemon.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/installd/cmd/root.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/installd/cmd/root.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/installd/installd.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/installd/installd.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/installservd/cmd/root.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/installservd/cmd/root.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/installservd/installservd.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/installservd/installservd.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/devprop/devprop.go" beforeDir="false" afterPath="$PROJECT_DIR$/devprop/devprop.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fileutils/http.go" beforeDir="false" afterPath="$PROJECT_DIR$/fileutils/http.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/installd/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/installd/config.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/installd/copyfile.go" beforeDir="false" afterPath="$PROJECT_DIR$/installd/copyfile.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/installd/devfsadm.go" beforeDir="false" afterPath="$PROJECT_DIR$/installd/devfsadm.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/installd/filesystem.go" beforeDir="false" afterPath="$PROJECT_DIR$/installd/filesystem.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/installd/install.go" beforeDir="false" afterPath="$PROJECT_DIR$/installd/install.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/installd/smf.go" beforeDir="false" afterPath="$PROJECT_DIR$/installd/smf.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/installd/sysding.go" beforeDir="false" afterPath="$PROJECT_DIR$/installd/sysding.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/installd/system_dirs.go" beforeDir="false" afterPath="$PROJECT_DIR$/installd/system_dirs.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/installd/system_links.go" beforeDir="false" afterPath="$PROJECT_DIR$/installd/system_links.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/installservd/asset.go" beforeDir="false" afterPath="$PROJECT_DIR$/installservd/asset.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/installservd/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/installservd/config.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/installservd/profile.go" beforeDir="false" afterPath="$PROJECT_DIR$/installservd/profile.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/installservd/rpc.go" beforeDir="false" afterPath="$PROJECT_DIR$/installservd/rpc.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/installservd/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/installservd/server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mount/solaris.go" beforeDir="false" afterPath="$PROJECT_DIR$/mount/illumos.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/samples/install_aci.json" beforeDir="false" afterPath="$PROJECT_DIR$/samples/install_tgz.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/uname/command.go" beforeDir="false" afterPath="$PROJECT_DIR$/uname/command.go" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
+  </component>
+  <component name="GOROOT" url="file:///snap/go/current" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GoLibraries">
+    <option name="indexEntireGoPath" value="false" />
+  </component>
+  <component name="MacroExpansionManager">
+    <option name="directoryName" value="ifmp4g6b" />
+  </component>
+  <component name="ProjectId" id="1yQiSn8drSowvu55KiVWNtwsO4x" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="DefaultGoTemplateProperty" value="Go File" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="TF_FMT" value="false" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="configurable..is.expanded" value="false" />
+    <property name="configurable.GoLibrariesConfigurable.is.expanded" value="true" />
+    <property name="go.formatter.settings.were.checked" value="true" />
+    <property name="go.import.settings.migrated" value="true" />
+    <property name="go.modules.go.list.on.any.changes.was.set" value="true" />
+    <property name="go.sdk.automatically.set" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
+    <property name="settings.editor.selected.configurable" value="com.goide.configuration.GoProjectSettingsConfigurable" />
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
+      <module name="openindiana-autoinstaller" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="FILE" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
+      <module name="openindiana-autoinstaller" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="DIRECTORY" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="8f59f56d-ed7b-4314-ac59-baea7a80c49c" name="Changes" comment="" />
+      <created>1632190217841</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1632190217841</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Massive modernisation and fixups" />
+    <MESSAGE value="Massive source overhaul to update to current golang" />
+    <option name="LAST_COMMIT_MESSAGE" value="Massive source overhaul to update to current golang" />
+  </component>
+  <component name="VgoProject">
+    <integration-enabled>true</integration-enabled>
+  </component>
+</project>

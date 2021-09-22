@@ -4,18 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"git.wegmueller.it/opencloud/installer/devprop"
 	"git.wegmueller.it/opencloud/opencloud/zfs"
-	"git.wegmueller.it/toasterson/glog"
+	"github.com/OpenFlowLabs/openindiana-autoinstaller/devprop"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
 
 const (
 	MediaTypeSolNetBoot = "solnetboot"
 	MediaTypeSolCDrom   = "solcdrom"
-	MediaTypeSolUSB     = "solusb"
 	MediaTypeZImage     = "zimage"
-	MediaTypeACI        = "ACI"
+	MediaTypeTGZ        = "tgz"
 )
 
 const (
@@ -24,7 +23,7 @@ const (
 )
 
 type InstallImage struct {
-	Type string `json:"type"` //Valid Values are SolNetboot, SolCdrom, SolUSB, ZImage, ACI(Default)
+	Type string `json:"type"` //Valid Values are SolNetboot, SolCdrom, SolUSB, ZImage, TGZ(Default)
 	URL  string `json:"url"`  //Where to get the Image from
 }
 
@@ -118,7 +117,7 @@ func (conf *InstallConfiguration) FillUnSetValues() {
 		if conf.RootPWClear != "" {
 			hash, err := bcrypt.GenerateFromPassword([]byte(conf.RootPWClear), 5)
 			if err != nil {
-				glog.Critf("Could not hash password: This should not happen. Will terminate now. %s", err)
+				logrus.Errorf("Could not hash password: This should not happen. Will terminate now. %s", err)
 				panic(err)
 			}
 			conf.RootPW = string(hash)

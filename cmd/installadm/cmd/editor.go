@@ -6,7 +6,7 @@ import (
 
 	"os/exec"
 
-	"git.wegmueller.it/opencloud/installer/installservd"
+	"github.com/OpenFlowLabs/openindiana-autoinstaller/installservd"
 	"gopkg.in/yaml.v2"
 )
 

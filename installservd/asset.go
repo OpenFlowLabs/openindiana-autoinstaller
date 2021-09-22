@@ -3,7 +3,7 @@ package installservd
 import (
 	"path/filepath"
 
-	"github.com/satori/go.uuid"
+	"github.com/gofrs/uuid"
 )
 
 var Assets map[string]*Asset

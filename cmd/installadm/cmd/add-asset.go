@@ -8,8 +8,7 @@ import (
 
 	"fmt"
 
-	"git.wegmueller.it/opencloud/installer/installservd"
-	"git.wegmueller.it/opencloud/opencloud/common"
+	"github.com/OpenFlowLabs/openindiana-autoinstaller/installservd"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -18,7 +17,7 @@ var AddAssetCommand = &cobra.Command{
 	Use:   "add-asset",
 	Short: "add an asset to the Installation Server",
 	Args:  cobra.MinimumNArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		target := args[0]
 		src := args[1]
 		rpcArgs := installservd.AddAssetArg{}
@@ -28,12 +27,12 @@ var AddAssetCommand = &cobra.Command{
 			var srcFile *os.File
 			var err error
 			if srcFile, err = os.Open(src); err != nil {
-				common.ExitWithErr("Could not read asset: ", err)
+				return fmt.Errorf("could not read asset: %s", err)
 			}
 			defer srcFile.Close()
 			buff := bytes.NewBuffer(rpcArgs.Content)
 			if _, err = io.Copy(buff, srcFile); err != nil {
-				common.ExitWithErr("Could not read asset: ", err)
+				return fmt.Errorf("could not read asset: %s", err)
 			}
 			rpcArgs.Content = buff.Bytes()
 		}
@@ -43,10 +42,11 @@ var AddAssetCommand = &cobra.Command{
 
 		var reply string
 		if err := rpcDialServer(viper.GetString("socket"), "InstallservdRPCReceiver.AddAsset", rpcArgs, &reply); err != nil {
-			common.ExitWithErr("Could not conntact installservd: ", err)
+			return fmt.Errorf("could not conntact installservd: %s", err)
 		}
 		fmt.Println(reply)
-		os.Exit(0)
+
+		return nil
 	},
 }
 

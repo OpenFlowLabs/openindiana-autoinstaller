@@ -3,7 +3,7 @@ package installservd
 import (
 	"fmt"
 
-	"git.wegmueller.it/opencloud/installer/installd"
+	"github.com/OpenFlowLabs/openindiana-autoinstaller/installd"
 )
 
 var Profiles []Profile

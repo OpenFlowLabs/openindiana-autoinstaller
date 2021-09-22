@@ -1,10 +1,10 @@
-// +build solaris
+// +build illumos
 
 package installd
 
 import "os/exec"
 
-var devfsadm_bin = "/usr/sbin/devfsadm"
+const devfsadmBin = "/usr/sbin/devfsadm"
 
 func runDevfsadm(root string, device_classes []string) (err error) {
 	var args []string
@@ -14,7 +14,7 @@ func runDevfsadm(root string, device_classes []string) (err error) {
 	for _, dev_class := range device_classes {
 		args = append(args, "-c", dev_class)
 	}
-	devfsadm := exec.Command(devfsadm_bin, args...)
+	devfsadm := exec.Command(devfsadmBin, args...)
 	if err = devfsadm.Run(); err != nil {
 		return
 	}

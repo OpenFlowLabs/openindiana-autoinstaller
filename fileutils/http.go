@@ -3,8 +3,8 @@ package fileutils
 import (
 	"time"
 
-	"git.wegmueller.it/toasterson/glog"
 	"github.com/cavaliercoder/grab"
+	"github.com/sirupsen/logrus"
 )
 
 func HTTPDownload(url string, location string) (err error) {
@@ -27,7 +27,7 @@ func HTTPDownloadTo(url string, location string) (file string, err error) {
 func doDownload(request *grab.Request) (resp *grab.Response) {
 	client := grab.NewClient()
 	// start download
-	glog.Infof("Downloading %v...", request.URL())
+	logrus.Infof("Downloading %v...", request.URL())
 	resp = client.Do(request)
 
 	// start UI loop
@@ -38,7 +38,7 @@ ProgressLoop:
 	for {
 		select {
 		case <-t.C:
-			glog.Infof("  transferred %v / %v bytes (%.2f%%)",
+			logrus.Infof("  transferred %v / %v bytes (%.2f%%)",
 				resp.BytesComplete(),
 				resp.Size,
 				100*resp.Progress())
@@ -49,6 +49,6 @@ ProgressLoop:
 		}
 	}
 
-	glog.Infof("Download saved to %v", resp.Filename)
+	logrus.Infof("Download saved to %v", resp.Filename)
 	return
 }

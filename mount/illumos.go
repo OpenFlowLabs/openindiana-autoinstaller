@@ -1,4 +1,4 @@
-// +build solaris
+// +build illumos
 
 package mount
 
@@ -10,15 +10,15 @@ import (
 
 	"errors"
 
-	"github.com/toasterson/mozaik/logger"
+	"github.com/sirupsen/logrus"
 )
 
 const (
-	lofiadm_bin string = "/usr/sbin/lofiadm"
-	mount_bin   string = "/usr/sbin/mount"
+	lofiadmBin string = "/usr/sbin/lofiadm"
+	mountBin   string = "/usr/sbin/mount"
 )
 
-func MountLoopDevice(fstype string, mountpoint string, file string) error {
+func LoopDevice(fstype string, mountpoint string, file string) error {
 	lofibuff, lofierr, err := lofiExec([]string{"-a", file})
 	if err != nil {
 		if !strings.Contains(lofierr, "Device busy") {
@@ -30,8 +30,8 @@ func MountLoopDevice(fstype string, mountpoint string, file string) error {
 		lofibuff, lofierr, err = lofiExec([]string{file})
 	}
 	var mountbuff, mounterr bytes.Buffer
-	mount := exec.Command(mount_bin, fmt.Sprintf("-F%s", fstype), "-o", "ro", lofibuff, mountpoint)
-	logger.Trace(mount.Path, mount.Args)
+	mount := exec.Command(mountBin, fmt.Sprintf("-F%s", fstype), "-o", "ro", lofibuff, mountpoint)
+	logrus.Trace(mount.Path, mount.Args)
 	mount.Stdout = &mountbuff
 	mount.Stderr = &mounterr
 	if err := mount.Run(); err != nil {
@@ -43,11 +43,11 @@ func MountLoopDevice(fstype string, mountpoint string, file string) error {
 //TODO func IsMounted(device, path) bool
 
 func lofiExec(args []string) (out string, errout string, err error) {
-	lofiadm := exec.Command(lofiadm_bin, args...)
+	lofiadm := exec.Command(lofiadmBin, args...)
 	var lofibuff, lofierr bytes.Buffer
 	lofiadm.Stdout = &lofibuff
 	lofiadm.Stderr = &lofierr
-	logger.Trace(lofiadm.Path, lofiadm.Args)
+	logrus.Trace(lofiadm.Path, lofiadm.Args)
 	err = lofiadm.Run()
 	out = strings.TrimSpace(lofibuff.String())
 	errout = strings.TrimSpace(lofierr.String())

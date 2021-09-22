@@ -2,9 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
-	"git.wegmueller.it/opencloud/opencloud/common"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -12,13 +10,14 @@ import (
 var PingCommand = &cobra.Command{
 	Use:   "ping",
 	Short: "ping the server for debugging",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		var reply string
 		if err := rpcDialServer(viper.GetString("socket"), "InstallservdRPCReceiver.Ping", "ping", &reply); err != nil {
-			common.ExitWithErr("Could not conntact installservd: ", err)
+			return fmt.Errorf("could not conntact installservd: %s", err)
 		}
 		fmt.Println(reply)
-		os.Exit(0)
+
+		return nil
 	},
 }
 

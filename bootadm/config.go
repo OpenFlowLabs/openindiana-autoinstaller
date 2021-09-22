@@ -1,4 +1,4 @@
-// +build solaris
+// +build illumos
 
 package bootadm
 
@@ -8,8 +8,8 @@ import (
 	"os"
 	"text/template"
 
-	"git.wegmueller.it/opencloud/opencloud/uname"
-	"github.com/toasterson/mozaik/logger"
+	"github.com/OpenFlowLabs/openindiana-autoinstaller/uname"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -60,12 +60,13 @@ func CreateBootConfigurationFiles(rootDir string, conf BootConfig) (err error) {
 	if hplatform == uname.HardwarePlatformXen {
 		config = xenBootConfig
 		confLocation = grubConfFile
-		logger.Info("Configuring Bootloader for Xen")
+		logrus.Info("Configuring Bootloader for Xen")
 	} else if conf.Type == BootLoaderTypeGrub {
 		config = grubBootConfig
 		confLocation = grubConfFile
-		logger.Info("Using Grub Configuration for Installation")
+		logrus.Info("Using Grub Configuration for Installation")
 	}
+
 	tmplConfig, err := template.New("BootConfig").Parse(config)
 	if err != nil {
 		return
@@ -78,12 +79,14 @@ func CreateBootConfigurationFiles(rootDir string, conf BootConfig) (err error) {
 	if err = os.Mkdir(fmt.Sprintf("/%s/boot", conf.RPoolName), os.ModeDir); err != nil {
 		return
 	}
+
 	confFile, err := os.Create(fmt.Sprintf(confLocation, conf.RPoolName))
 	if err != nil {
 		return
 	}
-	logger.Info("Writing Configuration")
-	logger.Trace(out.String())
+
+	logrus.Info("Writing Configuration")
+	logrus.Trace(out.String())
 	_, err = confFile.Write(out.Bytes())
 	return
 }

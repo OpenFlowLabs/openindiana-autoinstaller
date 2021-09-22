@@ -11,16 +11,13 @@ import (
 	"path"
 	"path/filepath"
 
-	"git.wegmueller.it/opencloud/installer/devprop"
-	"git.wegmueller.it/opencloud/installer/installd"
-	"git.wegmueller.it/opencloud/opencloud/common"
-	"git.wegmueller.it/toasterson/daemon"
-	"git.wegmueller.it/toasterson/glog"
+	"github.com/OpenFlowLabs/openindiana-autoinstaller/devprop"
+	"github.com/OpenFlowLabs/openindiana-autoinstaller/fileutils"
+	"github.com/OpenFlowLabs/openindiana-autoinstaller/installd"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
-
-var Daemon daemon.Daemon
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -30,8 +27,8 @@ var RootCmd = &cobra.Command{
 	If executed without arguments it will start a instance of itself in daemon mode
 	Use -i to stay in foreground
 	`,
-	PersistentPreRun: preRun,
-	Run: func(cmd *cobra.Command, args []string) {
+	PersistentPreRunE: preRun,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		//Run As a Process we do not need to start another instance in the background
 		if viper.GetBool("daemon") || viper.GetBool("interactive") {
 			// Running in Daemon mode means we look to see if we can grab the config and try to execute what was passed to us.
@@ -46,12 +43,12 @@ var RootCmd = &cobra.Command{
 			}
 			if configFileName == "" {
 				//TODO Webserver to listen for commands
-				os.Exit(0)
+				return fmt.Errorf("webserver functionality not implemented yet")
 			}
 			if err := runInstall(configFileName, noop); err != nil {
-				common.ExitWithErr("Error could not perform installation: %s", err)
+				return fmt.Errorf("error could not perform installation: %e", err)
 			}
-			os.Exit(0)
+
 		} else {
 			//If we are here it means we assume to have been called by init or by hand and should start the daemon
 			if exeName, err := os.Executable(); err == nil {
@@ -66,12 +63,14 @@ var RootCmd = &cobra.Command{
 				}
 				cmd := exec.Command(exeName, "--daemon")
 				if err := cmd.Start(); err != nil {
-					common.ExitWithErr("could not start daemon: %s", err)
+					return fmt.Errorf("could not start daemon: %e", err)
 				}
 			} else {
-				common.ExitWithErr("Could not launch Daemon: %s", err)
+				return fmt.Errorf("could not launch Daemon: %e", err)
 			}
 		}
+
+		return nil
 	},
 }
 
@@ -84,28 +83,40 @@ func Execute() {
 	}
 }
 
-func preRun(_ *cobra.Command, _ []string) {
+func preRun(_ *cobra.Command, _ []string) error {
 	loglevel := viper.GetString("loglevel")
 	debug := viper.GetBool("debug")
 	config := viper.GetString("config")
+
 	if loglevel != "" {
-		glog.SetLevelFromString(loglevel)
+		switch strings.ToLower(loglevel) {
+		case "trace":
+			logrus.SetLevel(logrus.TraceLevel)
+		case "debug":
+			logrus.SetLevel(logrus.DebugLevel)
+		case "info":
+			logrus.SetLevel(logrus.InfoLevel)
+		case "warn":
+			logrus.SetLevel(logrus.WarnLevel)
+		default:
+			logrus.SetLevel(logrus.InfoLevel)
+		}
 	}
+
 	if debug {
-		glog.SetLevel(glog.LOG_DEBUG)
+		logrus.SetLevel(logrus.DebugLevel)
 	}
+
 	if config != "" {
 		viper.SetConfigFile(config)
 	}
+
 	err := viper.ReadInConfig() // Find and read the config file
 	if err != nil {             // Handle errors reading the config file
-		common.ExitWithErr("Fatal error config file: %s", err)
+		return fmt.Errorf("fatal error config file: %e", err)
 	}
-	if viper.GetBool("daemon") {
-		if Daemon, err = daemon.New("installd", "illumos Installation Daemon", "svc:/milestone/network:default"); err != nil {
-			common.ExitWithErr("could not create new Daemon Instance %s", err)
-		}
-	}
+
+	return nil
 }
 
 func init() {
@@ -130,7 +141,7 @@ func runInstall(configLocation string, noop bool) error {
 	var downloaded = false
 	if strings.HasPrefix(configLocation, "http") || strings.HasPrefix(configLocation, "https") {
 		var dlErr error
-		if configLocation, dlErr = installd.HTTPDownloadTo(configLocation, "/tmp"); dlErr != nil {
+		if configLocation, dlErr = fileutils.HTTPDownloadTo(configLocation, "/tmp"); dlErr != nil {
 			return dlErr
 		}
 		downloaded = true

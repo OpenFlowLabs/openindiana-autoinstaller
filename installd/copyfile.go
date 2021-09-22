@@ -1,4 +1,4 @@
-// +build solaris
+// +build illumos
 
 package installd
 
@@ -8,7 +8,7 @@ import (
 	"strings"
 	"syscall"
 
-	"git.wegmueller.it/toasterson/glog"
+	"github.com/sirupsen/logrus"
 )
 
 func walkCopy(path string, info os.FileInfo, err error) error {
@@ -22,7 +22,7 @@ func walkCopy(path string, info os.FileInfo, err error) error {
 		return err
 	}
 	if info.IsDir() {
-		glog.Tracef("Mkdir %s", dstpath)
+		logrus.Tracef("Mkdir %s", dstpath)
 		if err := os.Mkdir(dstpath, info.Mode()); err != nil {
 			return err
 		}
@@ -36,7 +36,7 @@ func walkCopy(path string, info os.FileInfo, err error) error {
 	} else if lsrcinfo.Mode()&os.ModeSymlink != 0 {
 		//We have a Symlink thus Create it on the Target
 		dstTarget, _ := os.Readlink(path)
-		glog.Tracef("Creating Symlink %s -> %s", dstpath, dstTarget)
+		logrus.Tracef("Creating Symlink %s -> %s", dstpath, dstTarget)
 		if err := os.Symlink(dstTarget, dstpath); err != nil {
 			return err
 		}
@@ -48,29 +48,29 @@ func walkCopy(path string, info os.FileInfo, err error) error {
 }
 
 func copyFileExact(source string, srcInfo os.FileInfo, dest string) {
-	glog.Tracef("Copy %s -> %s", source, dest)
+	logrus.Tracef("Copy %s -> %s", source, dest)
 	src, err := os.Open(source)
 	defer src.Close()
 	if err != nil {
-		glog.Errf("Cant open %s: %s", source, err)
+		logrus.Errorf("Cant open %s: %s", source, err)
 		return
 	}
 	dst, err := os.Create(dest)
 	defer dst.Close()
 	if err != nil {
-		glog.Errf("Cant open %s: %s", dest, err)
+		logrus.Errorf("Cant open %s: %s", dest, err)
 		return
 	}
 	_, err = io.Copy(dst, src)
 	if err != nil {
-		glog.Errf("Can not copy %s -> %s: %s", source, dest, err)
+		logrus.Errorf("Can not copy %s -> %s: %s", source, dest, err)
 	}
 	//dst.Sync()
 	srcStat := srcInfo.Sys().(*syscall.Stat_t)
 	err = syscall.Chmod(dest, srcStat.Mode)
 	err = syscall.Chown(dest, int(srcStat.Uid), int(srcStat.Gid))
 	if err != nil {
-		glog.Errf("Failed to set user/group/mode of %s: %s", dest, err)
+		logrus.Errorf("Failed to set user/group/mode of %s: %s", dest, err)
 	}
 	//os.Chtimes(dest, time.Unix(int64(srcStat.Atim.Sec),int64(srcStat.Atim.Nsec)), time.Unix(int64(srcStat.Mtim.Sec),int64(srcStat.Mtim.Nsec)))
 }

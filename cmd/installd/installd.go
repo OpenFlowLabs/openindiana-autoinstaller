@@ -14,7 +14,7 @@
 
 package main
 
-import "git.wegmueller.it/opencloud/installer/cmd/installd/cmd"
+import "github.com/OpenFlowLabs/openindiana-autoinstaller/cmd/installd/cmd"
 
 func main() {
 	cmd.Execute()

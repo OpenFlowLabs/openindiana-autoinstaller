@@ -7,7 +7,7 @@ import (
 
 	"path/filepath"
 
-	"git.wegmueller.it/toasterson/glog"
+	"github.com/sirupsen/logrus"
 )
 
 func createSysDingConf(conf *InstallConfiguration, noop bool) error {
@@ -44,7 +44,7 @@ func createSysDingConf(conf *InstallConfiguration, noop bool) error {
 	}
 
 	if noop {
-		glog.Infof("Would write the following sysding.cong: %s", buffer.String())
+		logrus.Infof("Would write the following sysding.cong: %s", buffer.String())
 		return nil
 	}
 

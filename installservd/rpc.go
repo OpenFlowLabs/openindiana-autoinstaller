@@ -8,15 +8,15 @@ import (
 
 	"io/ioutil"
 
-	"git.wegmueller.it/opencloud/installer/fileutils"
-	"github.com/satori/go.uuid"
+	"github.com/OpenFlowLabs/openindiana-autoinstaller/fileutils"
+	"github.com/gofrs/uuid"
 )
 
-type InstallservdRPCReceiver struct {
+type RPCReceiver struct {
 	server *Installservd
 }
 
-func (r *InstallservdRPCReceiver) Ping(message string, reply *string) error {
+func (r *RPCReceiver) Ping(message string, reply *string) error {
 	r.server.Echo.Logger.Print(message)
 	*reply = "Pong"
 	return nil
@@ -41,7 +41,7 @@ func getAssets(names ...string) []*Asset {
 	return assets
 }
 
-func (r *InstallservdRPCReceiver) AddProfile(profile Profile, reply *string) error {
+func (r *RPCReceiver) AddProfile(profile Profile, reply *string) error {
 	if err := r.server.AddProfile(profile); err != nil {
 		*reply = err.Error()
 		return err
@@ -62,7 +62,7 @@ type AddAssetArg struct {
 	Type    string
 }
 
-func (r *InstallservdRPCReceiver) AddAsset(args AddAssetArg, reply *string) (err error) {
+func (r *RPCReceiver) AddAsset(args AddAssetArg, reply *string) (err error) {
 
 	defer func() {
 		if err != nil {
@@ -131,7 +131,7 @@ func (r *InstallservdRPCReceiver) AddAsset(args AddAssetArg, reply *string) (err
 	return nil
 }
 
-func (r *InstallservdRPCReceiver) ListProfiles(args string, reply *[]Profile) error {
+func (r *RPCReceiver) ListProfiles(args string, reply *[]Profile) error {
 	*reply = Profiles
 	return nil
 }

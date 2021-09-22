@@ -1,6 +1,6 @@
 package main
 
-import "git.wegmueller.it/opencloud/installer/cmd/installadm/cmd"
+import "github.com/OpenFlowLabs/openindiana-autoinstaller/cmd/installadm/cmd"
 
 func main() {
 	cmd.Execute()

@@ -8,7 +8,7 @@ import (
 
 //Add Functionality that standard Uname syscall does not have.
 
-const uname_bin = "/usr/bin/uname"
+const unameBin = "/usr/bin/uname"
 
 func GetHardwarePlatform() string {
 	return execUname("-i")
@@ -19,7 +19,7 @@ func GetProcessorType() string {
 }
 
 func execUname(arg string) string {
-	uname := exec.Command(uname_bin, arg)
+	uname := exec.Command(unameBin, arg)
 	var out bytes.Buffer
 	uname.Stdout = &out
 	err := uname.Run()

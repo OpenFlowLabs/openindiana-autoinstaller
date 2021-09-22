@@ -5,10 +5,10 @@ import (
 	"os/exec"
 )
 
-const devprop_bin string = "/sbin/devprop"
+const devpropBin string = "/sbin/devprop"
 
 func GetValue(key string) (value string) {
-	cmd := exec.Command(devprop_bin, key)
+	cmd := exec.Command(devpropBin, key)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 

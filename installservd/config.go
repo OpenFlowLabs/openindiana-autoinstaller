@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"git.wegmueller.it/opencloud/installer/fileutils"
+	"github.com/OpenFlowLabs/openindiana-autoinstaller/fileutils"
 )
 
 func saveToDisk(home, fileName string, obj interface{}) error {

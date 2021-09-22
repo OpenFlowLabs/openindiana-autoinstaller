@@ -24,7 +24,7 @@ type Installservd struct {
 	ServerHome  string
 	Socket      net.Listener
 	SocketPath  string
-	RPCReceiver *InstallservdRPCReceiver
+	RPCReceiver *RPCReceiver
 	runRPC      bool
 }
 
@@ -73,7 +73,7 @@ func (i *Installservd) setupWebServer() error {
 
 func (i *Installservd) StartRPC(sock string) (err error) {
 	i.SocketPath = sock
-	i.RPCReceiver = &InstallservdRPCReceiver{server: i}
+	i.RPCReceiver = &RPCReceiver{server: i}
 	i.runRPC = true
 	if _, err := os.Stat(i.SocketPath); !os.IsNotExist(err) {
 		//Best effort

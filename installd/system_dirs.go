@@ -1,4 +1,4 @@
-// +build solaris,cgo
+// +build illumos
 
 package installd
 
@@ -10,7 +10,7 @@ import (
 
 	"path/filepath"
 
-	"git.wegmueller.it/toasterson/glog"
+	"github.com/sirupsen/logrus"
 )
 
 type DirConfig struct {
@@ -51,10 +51,10 @@ func makeSystemDirectories(rootDir string, dirs []DirConfig, noop bool) error {
 	for _, dir := range dirs {
 		path := filepath.Join(rootDir, dir.Name)
 		if noop {
-			glog.Infof("would create directory %s -> %v", path, dir)
+			logrus.Infof("would create directory %s -> %v", path, dir)
 			continue
 		}
-		glog.Tracef("Creating System Directory %s", path)
+		logrus.Tracef("Creating System Directory %s", path)
 		var uid, gid int
 		os.Mkdir(path, 0755)
 		if dir.Mode != 0 {
@@ -63,7 +63,7 @@ func makeSystemDirectories(rootDir string, dirs []DirConfig, noop bool) error {
 		if dir.Owner != "" {
 			owner, err := user.Lookup(dir.Owner)
 			if err != nil {
-				glog.Errf("User %s does not exist this should not happen %s", dir.Owner, err)
+				logrus.Errorf("User %s does not exist this should not happen %s", dir.Owner, err)
 			} else {
 				uid, _ = strconv.Atoi(owner.Uid)
 			}
@@ -71,7 +71,7 @@ func makeSystemDirectories(rootDir string, dirs []DirConfig, noop bool) error {
 		if dir.Group != "" {
 			group, err := user.LookupGroup(dir.Group)
 			if err != nil {
-				glog.Errf("Group %s does not exist this should not happen: %s", dir.Group, err)
+				logrus.Errorf("Group %s does not exist this should not happen: %s", dir.Group, err)
 			} else {
 				gid, _ = strconv.Atoi(group.Gid)
 			}

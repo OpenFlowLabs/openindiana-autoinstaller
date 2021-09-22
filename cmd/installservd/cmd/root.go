@@ -7,15 +7,11 @@ import (
 
 	"strings"
 
-	"git.wegmueller.it/opencloud/installer/installservd"
-	"git.wegmueller.it/opencloud/opencloud/common"
-	"git.wegmueller.it/toasterson/daemon"
-	"git.wegmueller.it/toasterson/glog"
+	"github.com/OpenFlowLabs/openindiana-autoinstaller/installservd"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
-
-var Daemon daemon.Daemon
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -24,20 +20,20 @@ var RootCmd = &cobra.Command{
 	Long: `Ths Daemon Server files and configurations to all installing servers. Or other Software wanting them.
 	This Daemon is managed via installadm command. If you want to do anything with this Daemon use installadm.
 	`,
-	PersistentPreRun: preRun,
-	Run: func(cmd *cobra.Command, args []string) {
+	PersistentPreRunE: preRun,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		//Run As a Process we do not need to start another instance in the background
 		if viper.GetBool("daemon") || viper.GetBool("interactive") {
 			// Running in Daemon mode means we look to see if we can grab the config and try to execute what was passed to us.
 			//configFileName := viper.GetString("config")
 			server, err := installservd.New()
 			if err != nil {
-				common.ExitWithErr("Could not initialize server: %s", err)
+				return fmt.Errorf("could not initialize server: %s", err)
 			}
 			listen := viper.GetString("listen")
 			cert := viper.GetString("cert")
 			if err := server.StartRPC(viper.GetString("socket")); err != nil {
-				common.ExitWithErr("Could not open rpc Server: %s", err)
+				return fmt.Errorf("could not open rpc Server: %s", err)
 			}
 			if cert == "auto" {
 				server.Echo.StartAutoTLS(listen)
@@ -48,9 +44,8 @@ var RootCmd = &cobra.Command{
 				server.Echo.Start(listen)
 			}
 			if err := server.StopRPC(); err != nil {
-				common.ExitWithErr("Could not close rpc properly: %s", err)
+				return fmt.Errorf("could not close rpc properly: %s", err)
 			}
-			os.Exit(0)
 		} else {
 			//If we are here it means we assume to have been called by init or by hand and should start the daemon
 			if exeName, err := os.Executable(); err == nil {
@@ -61,12 +56,14 @@ var RootCmd = &cobra.Command{
 				}
 				cmd := exec.Command(exeName, "--daemon")
 				if err := cmd.Start(); err != nil {
-					common.ExitWithErr("could not start daemon: %s", err)
+					return fmt.Errorf("could not start daemon: %s", err)
 				}
 			} else {
-				common.ExitWithErr("Could not launch Daemon: %s", err)
+				return fmt.Errorf("could not launch Daemon: %s", err)
 			}
 		}
+
+		return nil
 	},
 }
 
@@ -79,23 +76,40 @@ func Execute() {
 	}
 }
 
-func preRun(_ *cobra.Command, _ []string) {
+func preRun(_ *cobra.Command, _ []string) error {
 	loglevel := viper.GetString("loglevel")
 	debug := viper.GetBool("debug")
 	config := viper.GetString("config")
 	if loglevel != "" {
-		glog.SetLevelFromString(loglevel)
+		switch strings.ToLower(loglevel) {
+		case "trace":
+			logrus.SetLevel(logrus.TraceLevel)
+		case "debug":
+			logrus.SetLevel(logrus.DebugLevel)
+		case "info":
+			logrus.SetLevel(logrus.InfoLevel)
+		case "warn":
+			logrus.SetLevel(logrus.WarnLevel)
+		default:
+			logrus.SetLevel(logrus.InfoLevel)
+		}
 	}
+
 	if debug {
-		glog.SetLevel(glog.LOG_DEBUG)
+		logrus.SetLevel(logrus.DebugLevel)
 	}
+
 	if config != "" {
 		viper.SetConfigFile(config)
 	}
+
 	err := viper.ReadInConfig() // Find and read the config file
 	if err != nil {             // Handle errors reading the config file
-		glog.Errf("Could not read Config: ", err)
+		logrus.Errorf("could not read Config: %e", err)
+		return err
 	}
+
+	return nil
 }
 
 func init() {

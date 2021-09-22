@@ -1,4 +1,4 @@
-// +build solaris
+// +build illumos
 
 package bootadm
 
@@ -6,7 +6,7 @@ import (
 	"os/exec"
 )
 
-const bootadm_bin = "/sbin/bootadm"
+const bootadmBin = "/sbin/bootadm"
 
 func InstallBootLoader(rootDir string, pool string) error {
 	args := []string{"install-bootloader"}
@@ -20,6 +20,6 @@ func InstallBootLoader(rootDir string, pool string) error {
 }
 
 func execBootadm(args []string) error {
-	bootadm := exec.Command(bootadm_bin, args...)
+	bootadm := exec.Command(bootadmBin, args...)
 	return bootadm.Run()
 }

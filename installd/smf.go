@@ -9,7 +9,7 @@ import (
 
 	"io/ioutil"
 
-	"git.wegmueller.it/toasterson/glog"
+	"github.com/sirupsen/logrus"
 )
 
 /*
@@ -27,36 +27,47 @@ var defaultProfileFiles = map[string]string{
 	"/etc/svc/profile/inetd_services.xml": "inetd_generic.xml",
 }
 
-func hookUpServiceManifests(conf *InstallConfiguration, rootDir string, noop bool) error {
-	for pFile, target := range defaultProfileFiles {
-		pPath := filepath.Join(rootDir, pFile)
-		if noop {
-			glog.Infof("Linking %s -> %s", pPath, target)
-			continue
-		}
-		if err := os.Symlink(target, pPath); err != nil {
-			if !os.IsExist(err) {
-				glog.Errf("Could not create link %s -> %s: %s", pPath, target, err)
-				continue
-			}
-			return err
-		}
+func setupSMFProfiles(conf *InstallConfiguration, rootDir string, noop bool) error {
+	if err := createSMFStandardProfileLinks(rootDir, noop); err != nil {
+		return err
 	}
+
 	tplSiteXML, err := template.New("SiteXML").Parse(siteTemplate)
 	if err != nil {
 		return err
 	}
+
 	var out bytes.Buffer
 	err = tplSiteXML.Execute(&out, conf)
 	if err != nil {
 		return err
 	}
+
 	if noop {
-		glog.Infof("Would write site.xml %s", out.String())
+		logrus.Infof("Would write site.xml %s", out.String())
 		return nil
 	}
-	glog.Infof("Writing site.xml %s", out.String())
+
+	logrus.Infof("Writing site.xml %s", out.String())
 	return ioutil.WriteFile(filepath.Join(rootDir, "etc/svc/profile/site.xml"), out.Bytes(), 0644)
+}
+
+func createSMFStandardProfileLinks(rootDir string, noop bool) error {
+	for pFile, target := range defaultProfileFiles {
+		pPath := filepath.Join(rootDir, pFile)
+		if noop {
+			logrus.Infof("Linking %s -> %s", pPath, target)
+			continue
+		}
+		if err := os.Symlink(target, pPath); err != nil {
+			if !os.IsExist(err) {
+				logrus.Errorf("Could not create link %s -> %s: %s", pPath, target, err)
+				continue
+			}
+			return err
+		}
+	}
+	return nil
 }
 
 const siteTemplate = `<?xml version='1.0'?>
